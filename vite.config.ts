@@ -8,20 +8,20 @@ export default defineConfig({
       entry: resolve(process.cwd(), 'src/index.ts'),
       name: 'Actor',
       fileName: 'actor',
-      formats: ['es', 'umd']
+      formats: ['es', 'umd'],
     },
     rollupOptions: {
       // By default Vite handles bundle of all code. If you want any external dependencies, list them here.
       external: [],
       output: {
-        globals: {}
-      }
-    }
+        globals: {},
+      },
+    },
   },
   plugins: [
     dts({
       tsconfigPath: './tsconfig.json',
-      exclude: ['src/**/*.test.ts']
-    })
-  ]
+      exclude: ['src/**/*.test.ts'],
+    }),
+  ],
 });

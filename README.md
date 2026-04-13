@@ -3,6 +3,7 @@
 A realistic, human-like virtual cursor for end-to-end testing, interactive tutorials, frontend automation, and demonstration purposes. Actor.js mimics human cursor movements using mathematical Bezier curves (inspired by Fitts's Law) and executes synthetic native browser events (like `mousedown`, `click`, `input`, etc.) accurately to provide an experience close to Playwright and Cypress directly inside the DOM.
 
 ## Features
+
 - **Human-like Movements**: Natural cursor sweeping and easing using Bezier curves.
 - **Native Event Dispatching**: Accurately simulates real DOM events (`mouseenter`, `click`, `input`).
 - **Framework Agnostic**: Works purely with vanilla JS, making it compatible with React, Vue, Angular, or plain HTML.
@@ -24,10 +25,10 @@ Import the `Actor` class and initialize it with your desired options:
 ```typescript
 import { Actor } from 'actor.js';
 
-const actor = new Actor({ 
-  humanize: true, 
-  showIndicator: true, 
-  speed: 0.5 
+const actor = new Actor({
+  humanize: true,
+  showIndicator: true,
+  speed: 0.5,
 });
 ```
 

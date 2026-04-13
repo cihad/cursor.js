@@ -4,14 +4,15 @@ Welcome to the **Actor.js** repository. This library provides a realistic, human
 
 ## ��� Architectural Overview
 
--   **Visual Layer (`src/core/Cursor.ts`)**: Renders a virtual mouse cursor (`#actor-cursor`) on the DOM using `position: absolute`. It seamlessly adapts to window scrolling and resizing, matching absolute coordinates `(pageX, pageY)`. Includes an "out of bounds" indicator for tracking the cursor when it scrolls outside the viewport.
--   **Engine & Queue (`src/Actor.ts`)**: A robust, chainable, and async-friendly promise-based action queue. Features declarative methods like `.hover()`, `.click()`, and `.type()`. Handles delays and humanized animation frames.
--   **Event Dispatcher (`src/core/EventDispatcher.ts`)**: Directly interfaces with DOM to dispatch real `MouseEvent` and `Event` classes. It triggers synthetic `mouseenter`/`mouseleave` to simulate hover states via CSS classes (`.actor-hover`). Also overrides the React 16+ Native value setter hack to trigger robust input/change simulation.
--   **Math Utilities (`src/core/utils.ts`)**: Contains algorithms (like Bezier curve logic) required for humanized sweeping and ease-out approximations.
+- **Visual Layer (`src/core/Cursor.ts`)**: Renders a virtual mouse cursor (`#actor-cursor`) on the DOM using `position: absolute`. It seamlessly adapts to window scrolling and resizing, matching absolute coordinates `(pageX, pageY)`. Includes an "out of bounds" indicator for tracking the cursor when it scrolls outside the viewport.
+- **Engine & Queue (`src/Actor.ts`)**: A robust, chainable, and async-friendly promise-based action queue. Features declarative methods like `.hover()`, `.click()`, and `.type()`. Handles delays and humanized animation frames.
+- **Event Dispatcher (`src/core/EventDispatcher.ts`)**: Directly interfaces with DOM to dispatch real `MouseEvent` and `Event` classes. It triggers synthetic `mouseenter`/`mouseleave` to simulate hover states via CSS classes (`.actor-hover`). Also overrides the React 16+ Native value setter hack to trigger robust input/change simulation.
+- **Math Utilities (`src/core/utils.ts`)**: Contains algorithms (like Bezier curve logic) required for humanized sweeping and ease-out approximations.
 
 ## ���️ Code Style & Rules
 
 When modifying or extending this library, GitHub Copilot must follow these core guidelines:
+
 1. **TypeScript Focus**: Avoid implicit `any`. Use strict DOM typings (e.g., `HTMLElement`, `HTMLInputElement`, `MouseEventInit`).
 2. **Framework Agnostic**: The dispatcher must rely purely on native vanilla JS APIs to remain universally compatible with React, Vue, Angular, or Vanilla JS without locking into one ecosystem. Handle native prototypes when manipulating properties like element values.
 3. **No Deadlocks in Promise Queues**: When adding internal asynchronous waits within the `Actor` sequence, use raw `setTimeout` inside promises. Never call `this.wait()` recursively inside action methods, as it triggers infinite loops by pushing wait events into the tail of the main queue instead of resolving inline.

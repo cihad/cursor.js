@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "e4453d2f51a009f6b49876cc4d46ce452194c54ea931d4a552a0eb0e9dd24c27"
     },
+    "turborepo": {
+      "source": "vercel/turborepo",
+      "sourceType": "github",
+      "computedHash": "e9c923a56fb6f16c22c438b37ee9db2a520588b439bfffb85c2ee025e992028f"
+    },
     "typescript-advanced-types": {
       "source": "wshobson/agents",
       "sourceType": "github",

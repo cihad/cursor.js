@@ -15,8 +15,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "build": "pnpm build:lib && pnpm build:demo",
+    "build:lib": "tsc && vite build",
+    "build:demo": "vite build -c vite.config.demo.ts",
+    "preview": "vite preview -c vite.config.demo.ts",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\""
   },

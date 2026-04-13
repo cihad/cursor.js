@@ -45,6 +45,19 @@ await actor
   .type('.search-input', 'Hello World', { delay: 50 });
 ```
 
+## Contributing
+
+We welcome contributions to `actor.js`! Since this project is a Turborepo monorepo and uses **Changesets** for version management, please follow these steps when proposing changes:
+
+1. Fork the repo and create a new branch from `main` (e.g., `feat/my-new-feature` or `fix/button-click`).
+2. Make your code changes and add your tests.
+3. Run `pnpm changeset` in the root of the repository.
+   - Select the package(s) you modified.
+   - Choose the bump type (major, minor, or patch).
+   - Write a short summary of your changes (this will appear in the `CHANGELOG.md`).
+4. Commit your changes **along with** the generated `.changeset/*.md` file.
+5. Open a Pull Request! Our automated system will take care of the rest.
+
 ## Architectural Overview
 
 - **Visual Layer (`src/core/Cursor.ts`)**: Renders a virtual mouse cursor (`#actor-cursor`) on the DOM using `position: absolute`. It seamlessly adapts to window scrolling and resizing, matching absolute coordinates `(pageX, pageY)`. Includes an "out of bounds" indicator for tracking the cursor when it scrolls outside the viewport.

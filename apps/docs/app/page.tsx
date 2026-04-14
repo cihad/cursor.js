@@ -63,7 +63,7 @@ export default function Page() {
 
   return (
     <main style={{ padding: '40px', minHeight: '200vh' }}>
-      <h1>Actor.js Docs</h1>
+      <h1>Cursor.js Docs</h1>
 
       <button
         id="start-demo-btn"

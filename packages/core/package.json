@@ -21,7 +21,8 @@
     "build:demo": "vite build -c vite.config.demo.ts",
     "preview": "vite preview -c vite.config.demo.ts",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.58.1",

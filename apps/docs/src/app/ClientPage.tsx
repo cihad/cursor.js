@@ -137,7 +137,7 @@ export function ClientPage() {
         </section>
 
         <section className="container mx-auto flex items-center justify-center py-12 px-6">
-          <div className="w-full max-w-3xl overflow-hidden rounded-xl border bg-card text-card-foreground shadow">
+          <div className="w-full max-w-3xl rounded-xl border bg-card text-card-foreground shadow">
             <div className="p-8">
               <Carousel className="w-full">
                 <CarouselContent>

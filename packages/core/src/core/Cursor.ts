@@ -1,6 +1,7 @@
-import { GhostCursor } from "./core/GhostCursor";
-import { EventDispatcher } from "./core/EventDispatcher";
-import { generateHumanPath } from "./core/utils";
+import { GhostCursor } from './GhostCursor';
+import { EventDispatcher } from './EventDispatcher';
+import { generateHumanPath } from './utils';
+import type { CursorPlugin } from '../plugins/CursorPlugin';
 
 export interface CursorOptions {
   speed?: number; // 0 to 1
@@ -9,9 +10,10 @@ export interface CursorOptions {
 }
 
 export class Cursor {
-  private cursor: GhostCursor;
+  public cursor: GhostCursor;
   private options: CursorOptions;
   private promise: Promise<void> = Promise.resolve();
+  private plugins: CursorPlugin[] = [];
 
   constructor(options: CursorOptions = {}) {
     this.options = {
@@ -23,20 +25,24 @@ export class Cursor {
     this.cursor = new GhostCursor({ showIndicator: this.options.showIndicator });
   }
 
+  use(plugin: CursorPlugin): this {
+    this.plugins.push(plugin);
+    plugin.install(this);
+    return this;
+  }
+
+  public addStep(task: () => Promise<void>): this {
+    return this.enqueue(task);
+  }
+
   private enqueue(task: () => Promise<void>): this {
     this.promise = this.promise.then(() => task());
     return this; // Allows chaining
   }
 
   then<TResult1 = void, TResult2 = never>(
-    onfulfilled?:
-      | ((value: void) => TResult1 | PromiseLike<TResult1>)
-      | undefined
-      | null,
-    onrejected?:
-      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
-      | undefined
-      | null,
+    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
   ): Promise<TResult1 | TResult2> {
     return this.promise.then(onfulfilled, onrejected);
   }
@@ -49,11 +55,10 @@ export class Cursor {
   }
 
   private async _hover(selector: string | Element) {
-    const element =
-      typeof selector === "string"
-        ? document.querySelector(selector)
-        : selector;
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
     if (!element) throw new Error(`Element not found: ${selector}`);
+
+    this.plugins.forEach((p) => p.onHoverStart?.(element));
 
     const rect = element.getBoundingClientRect();
     const targetX = rect.left + window.scrollX + rect.width / 2;
@@ -65,7 +70,7 @@ export class Cursor {
       rect.left < 0 ||
       rect.right > window.innerWidth
     ) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       await new Promise((r) => setTimeout(r, 500));
       const newRect = element.getBoundingClientRect();
       await this.moveGhostCursorTo(
@@ -77,7 +82,7 @@ export class Cursor {
     }
 
     EventDispatcher.toggleMimicHover(element, true);
-    EventDispatcher.triggerMouseEvent(element, "mouseenter");
+    EventDispatcher.triggerMouseEvent(element, 'mouseenter');
   }
 
   // 2. Click command
@@ -88,42 +93,31 @@ export class Cursor {
   }
 
   private async _click(selector: string | Element) {
-    const element =
-      typeof selector === "string"
-        ? document.querySelector(selector)
-        : selector;
+    const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
     if (!element) throw new Error(`Element not found: ${selector}`);
+
+    this.plugins.forEach((p) => p.onClickStart?.(element));
 
     await this._hover(element);
     EventDispatcher.click(element as HTMLElement);
   }
 
   // 3. Type command
-  type(
-    selector: string | Element,
-    text: string,
-    options?: { delay?: number },
-  ): this {
+  type(selector: string | Element, text: string, options?: { delay?: number }): this {
     return this.enqueue(async () => {
-      const element =
-        typeof selector === "string"
-          ? document.querySelector(selector)
-          : selector;
+      const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
       if (!element) throw new Error(`Element not found: ${selector}`);
 
       await this._click(element);
 
+      this.plugins.forEach((p) => p.onTypeStart?.(text));
+
       // Typing simulation
-      if (
-        element instanceof HTMLInputElement ||
-        element instanceof HTMLTextAreaElement
-      ) {
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
         const delay = options?.delay || 100;
         for (let i = 0; i < text.length; i++) {
           EventDispatcher.triggerInputEvent(element, element.value + text[i]);
-          await new Promise((r) =>
-            setTimeout(r, delay / 2 + Math.random() * delay),
-          ); // Human-like typing delay
+          await new Promise((r) => setTimeout(r, delay / 2 + Math.random() * delay)); // Human-like typing delay
         }
       }
     });
@@ -131,19 +125,14 @@ export class Cursor {
 
   // Utilities
   wait(ms: number): this {
-    return this.enqueue(
-      () => new Promise((resolve) => setTimeout(resolve, ms)),
-    );
+    return this.enqueue(() => new Promise((resolve) => setTimeout(resolve, ms)));
   }
 
   private async moveGhostCursorTo(targetX: number, targetY: number) {
+    this.plugins.forEach((p) => p.onMoveStart?.(targetX, targetY));
+
     if (this.options.humanize) {
-      const points = generateHumanPath(
-        this.cursor.x,
-        this.cursor.y,
-        targetX,
-        targetY,
-      );
+      const points = generateHumanPath(this.cursor.x, this.cursor.y, targetX, targetY);
       for (const point of points) {
         this.cursor.moveTo(point.x, point.y);
         await new Promise((r) => setTimeout(r, 16)); // Approx 60fps delay internally
@@ -154,6 +143,7 @@ export class Cursor {
   }
 
   destroy() {
+    this.plugins.forEach((p) => p.onDestroy?.());
     this.cursor.destroy();
   }
 }

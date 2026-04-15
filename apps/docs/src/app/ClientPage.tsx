@@ -159,7 +159,7 @@ export function ClientPage() {
                         Shadcn elements.
                       </p>
 
-                      <Accordion className="w-full max-w-lg border px-4 rounded-lg bg-background">
+                      <Accordion type="single" collapsible className="w-full max-w-lg border px-4 rounded-lg bg-background">
                         <AccordionItem value="item-1">
                           <AccordionTrigger id="demo-accordion-1">
                             Is it accessible?

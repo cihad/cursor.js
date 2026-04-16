@@ -10,6 +10,7 @@ export interface CursorOptions {
 
 export class Cursor {
   public cursor: GhostCursor;
+  public state: Record<string, any> = {};
   private options: CursorOptions;
   private promise: Promise<void> = Promise.resolve();
   private plugins: CursorPlugin[] = [];
@@ -294,5 +295,22 @@ export class Cursor {
   destroy() {
     this.plugins.forEach((p) => p.onDestroy?.());
     this.cursor.destroy();
+  }
+
+  setState(newState: Record<string, any>): this {
+    return this.do(async () => {
+      const oldState = { ...this.state };
+      this.state = { ...this.state, ...newState };
+
+      if (newState.size !== undefined) {
+        this.cursor.setSize(newState.size);
+      }
+
+      for (const plugin of this.plugins) {
+        if (plugin.onStateChange) {
+          plugin.onStateChange(this.state, oldState);
+        }
+      }
+    });
   }
 }

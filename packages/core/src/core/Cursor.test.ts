@@ -248,8 +248,8 @@ describe('Cursor', () => {
 
       await actor.setState({ size: 2 });
       expect(actor.state).toEqual({ cursorType: 'pointer', color: 'red', size: 2 });
-      // The cursor itself should also support scaling directly through state if we implement it,
-      // but let's test just the plugin propagation and state merging here.
+      // The cursor itself supports scaling directly through state
+      expect((actor as any).cursor.el.style.transform).toContain('scale(2)');
     });
   });
 });

@@ -165,7 +165,7 @@ export function ClickSoundDemo() {
       <p className="text-xs text-muted-foreground mb-4">
         Immersive keyboard and mouse sound effects.
       </p>
-      <div className="flex flex-col items-center justify-center gap-4 py-8 border rounded-md"> 
+      <div className="flex flex-col items-center justify-center gap-4 py-8 border rounded-md">
         <Button
           variant={soundEnabled ? 'default' : 'outline'}
           className="gap-2"
@@ -192,7 +192,7 @@ export function LoggingDemo() {
     let isActive = true;
     const c = new Cursor({ speed: 1 });
     c.use(new RipplePlugin({ size: 25 }));
-    
+
     if (enabled) {
       c.use(new LoggingPlugin());
     } else {
@@ -210,7 +210,10 @@ export function LoggingDemo() {
         .wait(300)
         .click('#demo-log-submit')
         .wait(600)
-        .do(() => isActive && (document.querySelector<HTMLInputElement>('#demo-log-input1')!.value = ''))
+        .do(
+          () =>
+            isActive && (document.querySelector<HTMLInputElement>('#demo-log-input1')!.value = ''),
+        )
         .do(() => {
           if (isActive) setTimeout(run, 0);
         });
@@ -232,9 +235,11 @@ export function LoggingDemo() {
         Open Developer Tools (F12) to see verbose logging of the cursor's coordinates, steps, and
         plugin states.
       </p>
-      
+
       <div className="flex items-center justify-between mb-4">
-        <Label htmlFor="demo-logging-toggle-main" className="cursor-pointer text-xs font-semibold">Enable Logging</Label>
+        <Label htmlFor="demo-logging-toggle-main" className="cursor-pointer text-xs font-semibold">
+          Enable Logging
+        </Label>
         <Switch id="demo-logging-toggle-main" checked={enabled} onCheckedChange={setEnabled} />
       </div>
 

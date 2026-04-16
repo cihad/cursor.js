@@ -25,7 +25,7 @@ export class RipplePlugin implements CursorPlugin {
     this.cursor = cursor;
   }
 
-  onClickStart(target: Element) {
+  onClickStart(_target: Element) {
     if (!this.cursor || typeof window === 'undefined') return;
 
     const { x, y } = this.cursor.cursor;

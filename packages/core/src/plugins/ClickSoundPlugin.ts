@@ -30,11 +30,22 @@ export class ClickSoundPlugin implements CursorPlugin {
     }
   }
 
+  onStateChange(newState: Record<string, any>) {
+    if (newState.clickSound?.volume !== undefined) {
+      this.options.volume = newState.clickSound.volume;
+      if (this.audioHtml) {
+        this.audioHtml.volume = this.options.volume as number;
+      }
+    }
+  }
+
   onClickStart(_target: Element) {
     if (this.audioHtml) {
       // 1. Durum: Ses dosyası yüklüyse onu baştan oynat
       this.audioHtml.currentTime = 0;
-      this.audioHtml.play().catch(() => { /* Autoplay engellerini yoksay */ });
+      this.audioHtml.play().catch(() => {
+        /* Autoplay engellerini yoksay */
+      });
       return;
     }
 

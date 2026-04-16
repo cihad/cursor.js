@@ -22,13 +22,13 @@ export function RippleDemo() {
 
     const run = () => {
       if (!isActive) return;
-      c.setState({ rippleColor: '#3b82f680', size: 25 })
+      c.setState({ ripple: { color: '#3b82f680', size: 25 } })
         .hover('#demo-ripple-input')
         .wait(300)
         .click('#demo-ripple-input')
         .type('#demo-ripple-input', 'Ripple test', { delay: 30 })
         .wait(500)
-        .setState({ rippleColor: '#ef444480', size: 40 })
+        .setState({ ripple: { color: '#ef444480', size: 40 } })
         .hover('#demo-ripple-button')
         .wait(300)
         .click('#demo-ripple-button')

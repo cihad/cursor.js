@@ -26,14 +26,14 @@ export class RipplePlugin implements CursorPlugin {
   }
 
   onStateChange(newState: Record<string, any>) {
-    if (newState.rippleColor !== undefined) {
-      this.options.color = newState.rippleColor;
+    if (newState.ripple?.color !== undefined) {
+      this.options.color = newState.ripple.color;
     }
-    if (newState.rippleDuration !== undefined) {
-      this.options.duration = newState.rippleDuration;
+    if (newState.ripple?.duration !== undefined) {
+      this.options.duration = newState.ripple.duration;
     }
-    if (newState.rippleSize !== undefined) {
-      this.options.size = newState.rippleSize;
+    if (newState.ripple?.size !== undefined) {
+      this.options.size = newState.ripple.size;
     }
   }
 

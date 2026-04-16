@@ -214,4 +214,42 @@ describe('Cursor', () => {
       expect(counter).toBe(1);
     });
   });
+
+  describe('State Management', () => {
+    it('.setState() updates instance state and triggers plugin hooks in sequence', async () => {
+      const actor = new Cursor({ humanize: false });
+      let pluginCalled = false;
+      let hookOldState = null;
+      let hookNewState = null;
+
+      const mockPlugin = {
+        name: 'MockThemePlugin',
+        install: () => {},
+        onStateChange: (ns: any, os: any) => {
+          pluginCalled = true;
+          hookNewState = ns;
+          hookOldState = os;
+        },
+      };
+
+      actor.use(mockPlugin);
+
+      expect(actor.state).toEqual({});
+
+      await actor
+        .wait(10)
+        .setState({ cursorType: 'pointer', color: 'red' })
+        .wait(10);
+
+      expect(actor.state).toEqual({ cursorType: 'pointer', color: 'red' });
+      expect(pluginCalled).toBe(true);
+      expect(hookOldState).toEqual({});
+      expect(hookNewState).toEqual({ cursorType: 'pointer', color: 'red' });
+
+      await actor.setState({ size: 2 });
+      expect(actor.state).toEqual({ cursorType: 'pointer', color: 'red', size: 2 });
+      // The cursor itself should also support scaling directly through state if we implement it,
+      // but let's test just the plugin propagation and state merging here.
+    });
+  });
 });

@@ -25,6 +25,12 @@ export class RipplePlugin implements CursorPlugin {
     this.cursor = cursor;
   }
 
+  onStateChange(newState: Record<string, any>) {
+    if (newState.rippleColor !== undefined) {
+      this.options.color = newState.rippleColor;
+    }
+  }
+
   onClickStart(_target: Element) {
     if (!this.cursor || typeof window === 'undefined') return;
 

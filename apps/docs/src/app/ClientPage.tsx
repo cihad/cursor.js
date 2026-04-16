@@ -29,6 +29,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Switch } from '@/components/ui/switch';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   SettingsSection,
@@ -369,8 +370,8 @@ export function ClientPage() {
 
                 <div className="flex items-center justify-between gap-2 mt-2">
                   <Label htmlFor="core-speed">speed</Label>
-                  <div className="flex items-center gap-1">
-                    <Input
+                  <InputGroup>
+                    <InputGroupInput
                       id="core-speed"
                       type="number"
                       min={0.1}
@@ -384,10 +385,10 @@ export function ClientPage() {
                           value: Number(e.target.value),
                         })
                       }
-                      className="h-7 w-16 text-right px-2 text-xs"
+                      className="h-7 text-right"
                     />
-                    <span className="text-xs text-muted-foreground">x</span>
-                  </div>
+                    <InputGroupAddon>x</InputGroupAddon>
+                  </InputGroup>
                 </div>
               </div>
 
@@ -424,11 +425,9 @@ export function ClientPage() {
                     <Label htmlFor="ripple-color" className="text-xs font-normal">
                       color
                     </Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {settings.rippleConfig.color}
-                      </span>
-                      <Input
+                    <InputGroup>
+                      <InputGroupInput
+                        className="w-10"
                         id="ripple-color"
                         type="color"
                         value={settings.rippleConfig.color}
@@ -439,16 +438,16 @@ export function ClientPage() {
                             value: e.target.value,
                           })
                         }
-                        className="w-6 h-6 p-0 border-0 cursor-pointer rounded-full overflow-hidden"
                       />
-                    </div>
+                      <InputGroupAddon>{settings.rippleConfig.color}</InputGroupAddon>
+                    </InputGroup>
                   </div>
                   <div className="flex flex-row items-center justify-between gap-2">
                     <Label htmlFor="ripple-duration" className="text-xs font-normal">
                       duration
                     </Label>
-                    <div className="flex items-center gap-1">
-                      <Input
+                    <InputGroup>
+                      <InputGroupInput
                         id="ripple-duration"
                         type="number"
                         min={100}
@@ -462,17 +461,16 @@ export function ClientPage() {
                             value: Number(e.target.value),
                           })
                         }
-                        className="h-7 w-16 text-right px-2 text-xs"
                       />
-                      <span className="text-xs text-muted-foreground">ms</span>
-                    </div>
+                      <InputGroupAddon>ms</InputGroupAddon>
+                    </InputGroup>
                   </div>
                   <div className="flex flex-row items-center justify-between gap-2">
                     <Label htmlFor="ripple-size" className="text-xs font-normal">
                       size
                     </Label>
-                    <div className="flex items-center gap-1">
-                      <Input
+                    <InputGroup className="h-7 w-24">
+                      <InputGroupInput
                         id="ripple-size"
                         type="number"
                         min={10}
@@ -486,10 +484,9 @@ export function ClientPage() {
                             value: Number(e.target.value),
                           })
                         }
-                        className="h-7 w-16 text-right px-2 text-xs"
                       />
-                      <span className="text-xs text-muted-foreground">px</span>
-                    </div>
+                      <InputGroupAddon>px</InputGroupAddon>
+                    </InputGroup>
                   </div>
                 </SettingsSectionBody>
               </SettingsSection>

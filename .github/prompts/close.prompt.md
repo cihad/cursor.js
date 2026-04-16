@@ -12,14 +12,11 @@ Follow these exact steps sequentially:
    - Use the execute tool to run `git status` to determine the current branch.
    - If the user provided a specific branch in "{{prompt}}", ensure we target that branch for deletion. If not, assume the current branch (if it's not `main`) is the one to be cleaned up.
 
-2. **Checkout Main**:
-   - Run `git checkout main` (or the default repository branch) to ensure we are not on the branch to be deleted.
-   - Run `git pull` to fetch and integrate the latest changes on the main branch.
+2. **Checkout Main, Pull and Cleanup**:
+   - Run the following combination command to switch to `main`, pull the latest changes from origin, safely delete the local feature branch, and clean up remote tracking references:
+     `git checkout main && git pull origin main && git branch -d <branch-name> && git remote prune origin`
+   - Note on Pruning: We use `git remote prune origin` here to simply remove deleted remote branch references from your local system without downloading new objects. In contrast, `git fetch --prune` would download new updates *and* clean up references.
+   - If Git complains about the branch not being fully merged (e.g. because of a squash merge on GitHub), ask the user for permission to force delete (`git branch -D <branch-name>`).
 
-3. **Prune and Cleanup**:
-   - Run `git fetch --prune` (or `git remote prune origin`) to clean up deleted remote branches. Not: `git fetch --prune` uzak sunucudaki güncellemeleri çeker ve silinmiş branch'leri yerelden de temizler, `git remote prune origin` ise sadece origin'de silinmiş olanları yereldeki izlerden temizler (yenilerini indirmez).
-   - Run `git branch -d <branch-name>` to safely delete the local feature/refactor branch. 
-   - If Git complains about the branch not being fully merged (e.g. squash merge on GitHub), ask the user for permission to force delete (`git branch -D <branch-name>`).
-
-4. **Confirmation**:
+3. **Confirmation**:
    - Confirm to the user that the branch has been successfully deleted locally and the repository is clean and up to date with `main`.

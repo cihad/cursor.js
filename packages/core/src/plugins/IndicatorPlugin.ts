@@ -59,6 +59,11 @@ export class IndicatorPlugin implements CursorPlugin {
 
     let isVisible = false;
 
+    // Update styling dynamically based on options
+    this.indicator.style.width = `${this.options.size}px`;
+    this.indicator.style.background = this.options.color as string;
+    this.indicator.style.boxShadow = `0 0 8px ${this.options.color}99`; // opacity 0.6 roughly
+
     if (clientY < 0) {
       // GhostCursor is above the viewport
       this.indicator.style.top = '6px';
@@ -75,6 +80,16 @@ export class IndicatorPlugin implements CursorPlugin {
 
     this.indicator.style.opacity = isVisible ? '1' : '0';
   };
+
+  onStateChange(newState: Record<string, any>) {
+    if (newState.indicator?.color !== undefined) {
+      this.options.color = newState.indicator.color;
+    }
+    if (newState.indicator?.size !== undefined) {
+      this.options.size = newState.indicator.size;
+    }
+    this.updateIndicator();
+  }
 
   onMove(_x: number, _y: number): void {
     this.updateIndicator();

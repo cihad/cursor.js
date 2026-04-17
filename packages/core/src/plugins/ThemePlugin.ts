@@ -170,9 +170,15 @@ export class ThemePlugin implements CursorPlugin {
        targetCursor = 'default';
     }
 
-    // Only update if it targets something that exists in theme explicitly,
-    // or if we just want to fallback.
-    this.cursorRef.setState({ theme: { cursor: targetCursor } });
+    // Only update synchronously to prevent massive promise queueing delays during move
+    if (!this.cursorRef.state.theme) {
+      this.cursorRef.state.theme = {};
+    }
+    
+    if (this.cursorRef.state.theme.cursor !== targetCursor) {
+      this.cursorRef.state.theme.cursor = targetCursor;
+      this.renderCursor(targetCursor);
+    }
   }
 
   onDestroy(): void {

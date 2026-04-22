@@ -234,20 +234,20 @@ describe('Cursor', () => {
 
       actor.use(mockPlugin);
 
-      expect(actor.state).toEqual({});
+      expect(actor.state).toEqual({ speed: 0.5, humanize: false });
 
       await actor
         .wait(10)
         .setState({ cursorType: 'pointer', color: 'red' })
         .wait(10);
 
-      expect(actor.state).toEqual({ cursorType: 'pointer', color: 'red' });
+      expect(actor.state).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red' });
       expect(pluginCalled).toBe(true);
-      expect(hookOldState).toEqual({});
-      expect(hookNewState).toEqual({ cursorType: 'pointer', color: 'red' });
+      expect(hookOldState).toEqual({ speed: 0.5, humanize: false });
+      expect(hookNewState).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red' });
 
       await actor.setState({ size: 2 });
-      expect(actor.state).toEqual({ cursorType: 'pointer', color: 'red', size: 2 });
+      expect(actor.state).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red', size: 2 });
       // The cursor itself supports scaling directly through state
       expect((actor as any).cursor.el.style.transform).toContain('scale(2)');
     });

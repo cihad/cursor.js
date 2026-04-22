@@ -15,7 +15,6 @@
     "pause",
     "next",
     "setState",
-    "setConfig",
     "use",
     "destroy"
   ]

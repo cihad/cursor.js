@@ -194,7 +194,7 @@ export function ClientPage() {
         .do(buildDemoSequence); // Re-queue the scenario at the end
     };
 
-    c.wait(100).setSize(5).move('#cursor-beginning').do(buildDemoSequence);
+    c.setSize(5).move('#cursor-beginning').do(buildDemoSequence);
 
     return () => {
       isActive = false;
@@ -274,10 +274,7 @@ export function ClientPage() {
             <Button size="lg" onClick={runDemo} disabled={demoState === 'running'}>
               {demoState === 'running' ? 'Demo is running...' : 'Run Live Demo'}
             </Button>
-            <Link
-              href="/docs"
-              className={buttonVariants({ size: 'lg', variant: 'outline' })}
-            >
+            <Link href="/docs" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
               Docs
             </Link>
             <Link

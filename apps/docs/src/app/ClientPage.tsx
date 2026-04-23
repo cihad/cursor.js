@@ -210,7 +210,7 @@ export function ClientPage() {
 
     const { coreConfig, plugins, rippleConfig } = settings;
 
-    c.setConfig({ humanize: coreConfig.humanize, speed: coreConfig.speed });
+    c.setState({ humanize: coreConfig.humanize, speed: coreConfig.speed });
 
     if (plugins.theme) {
       c.use(new ThemePlugin());

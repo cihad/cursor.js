@@ -24,12 +24,8 @@ export class Cursor {
       humanize: true,
       ...options,
     };
+    this.state = { ...this.options }; // Initialize state with options
     this.cursor = new GhostCursor();
-  }
-
-  setConfig(newOptions: Partial<CursorOptions>): this {
-    this.options = { ...this.options, ...newOptions };
-    return this;
   }
 
   use(plugin: CursorPlugin): this {
@@ -338,6 +334,12 @@ export class Cursor {
       const oldState = { ...this.state };
       this.state = { ...this.state, ...newState };
 
+      if (newState.speed !== undefined) {
+        this.options.speed = newState.speed;
+      }
+      if (newState.humanize !== undefined) {
+        this.options.humanize = newState.humanize;
+      }
       if (newState.size !== undefined) {
         this.cursor.setSize(newState.size);
       }

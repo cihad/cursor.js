@@ -5,10 +5,7 @@ import { cn } from '@/lib/utils';
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-const geistSans = Geist({
-  variable: '--font-sans',
-  subsets: ['latin'],
-});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -33,9 +30,10 @@ export default function RootLayout({
       className={cn(
         'h-full',
         'antialiased',
-        geistSans.variable,
         geistMono.variable,
         jetbrainsMono.variable,
+        'font-sans',
+        geist.variable,
       )}
       suppressHydrationWarning
     >

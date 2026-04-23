@@ -9,6 +9,11 @@ Pauses the continuous execution of the action sequence immediately. The cursor w
 
 *`stop()` acts as an alias to `pause()`.*
 
+### Use Cases
+
+- **Step-by-step guidance:** Freezing the presentation cursor while explicitly showing an important warning dialog to the user until they dismiss it.
+- **Asynchronous processing:** Calling `pause()` manually before performing a large file upload on behalf of the user, freezing pointer interaction deliberately.
+
 ### Example
 
 ```ts

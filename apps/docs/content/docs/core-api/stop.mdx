@@ -7,6 +7,11 @@ description: Stop the current execution queue.
 
 The `stop()` method halts the current execution sequence. It cancels any pending actions in the queue and stops the cursor from performing further movements or interactions.
 
+### Use Cases
+
+- **Handling errors:** Firing `stop()` dynamically from within an `if()` block if a required payment gateway is offline during an e-commerce walkthrough.
+- **User cancellation:** Binding a keyboard shortcut (like Escape) to instantly stop the virtual cursor walkthrough.
+
 ### Example
 
 ```ts

@@ -5,9 +5,33 @@ description: Execute a custom function within the queue.
 
 ## `do()`
 
-Execute any custom logic natively within the chain, pausing the execution while it runs and then safely resuming. 
+Execute any custom logic natively within the chain, pausing the execution while it runs and then safely resuming. `do()` is exceptionally useful for logic requiring programmatic cycles or accessing third-party logic.
 
-### Example
+### Use Cases
+
+- **Adding state to the application:** Useful for updating a variable or triggering logic in a third-party system.
+- **Adding an achievement:** Granting points or a badge to the user in a gaming or educational context.
+- **Creating a loop:** Setting up an asynchronous loop inside `.do()` to trigger cursor object methods (like `move`, `click`, etc.) sequentially.
+
+### Loop Example
+
+```ts
+const cursor = new Cursor();
+
+cursor
+  .hover('#start-loop')
+  .do(async (c) => {
+    // A loop clicking a button 3 times
+    for (let i = 0; i < 3; i++) {
+      c.move('#target-btn');
+      c.click('#target-btn');
+      c.wait(500); // wait half a second
+    }
+  })
+  .click('#finish');
+```
+
+### Standard Example
 
 ```ts
 const cursor = new Cursor();

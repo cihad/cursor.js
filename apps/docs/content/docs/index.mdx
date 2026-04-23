@@ -1,7 +1,35 @@
 ---
-title: Welcome to cursor.js
+title: Getting Started
 ---
 
 ## Introduction
 
 Welcome to the documentation for cursor.js. Here you will find the API reference and usage examples.
+
+## Installation
+
+You can install `cursor.js` using your preferred package manager:
+
+```bash
+npm install @cursor.js/core
+# or
+yarn add @cursor.js/core
+# or
+pnpm add @cursor.js/core
+```
+
+## Quick Start
+
+Here is a simple example to get you started:
+
+```ts
+import { Cursor } from '@cursor.js/core';
+
+const cursor = new Cursor();
+
+cursor
+  .hover('.submit-action')
+  .click('.submit-action')
+  .wait(1000)
+  .type('#search-box', 'Hello world!', { delay: 50 });
+```

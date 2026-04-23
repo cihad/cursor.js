@@ -1,0 +1,29 @@
+---
+title: removePlugin()
+description: Removes a registered CursorPlugin from the cursor.
+---
+
+## `removePlugin(name: string)`
+
+Removes an existing plugin from the `Cursor` instance using its name. When a plugin is removed, its `onDestroy` lifecycle method is called to allow it to clean up any event listeners, DOM elements, or styles it may have attached.
+
+Returns the `Cursor` instance to allow for method chaining.
+
+### Use Cases
+
+- **Dynamic configuration:** Turning a plugin on or off based on user preferences.
+- **Resource cleanup:** Unregistering plugins that are no longer needed to free up resources or DOM nodes during runtime.
+
+### Example
+
+```ts
+import { Cursor, RipplePlugin } from '@cursor.js/core';
+
+const cursor = new Cursor();
+
+const ripple = new RipplePlugin();
+cursor.use(ripple);
+
+// Later, remove the plugin by its name
+cursor.removePlugin('RipplePlugin');
+```

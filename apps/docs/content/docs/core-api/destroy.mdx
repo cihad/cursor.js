@@ -9,6 +9,11 @@ Safely cleans up DOM traces and notifies all plugins. Should be explicitly invok
 
 Any tasks queued in `.then()` chains halt permanently.
 
+### Use Cases
+
+- **React unmounting:** Ensuring that the cursor elements generated for a specific route demo are cleaned up when the user navigates away.
+- **Session stop:** Terminating automation once the user explicitly cancels or closes a modal showing the interactive guide.
+
 ### Example
 
 ```tsx

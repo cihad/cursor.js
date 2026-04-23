@@ -7,6 +7,11 @@ description: Suspends the queue until a native DOM event natively drops.
 
 Temporarily blocks the `Cursor` automated action queue asynchronously awaiting an explicitly named vanilla JavaScript event firing against a target element.
 
+### Use Cases
+
+- **Reacting to custom app events:** Pausing until a video finishes (`ended` event) before the cursor navigates to a new page.
+- **Waiting for CSS transitions:** Pausing until a side-menu finishes sliding entirely into the screen before the cursor clicks on its inner links.
+
 ### Example
 
 ```ts

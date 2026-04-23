@@ -9,11 +9,14 @@ The `ClickSoundPlugin` plays sound completely synchronized with the cursor's `cl
 
 ### Demo
 
-<div className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative">
-  <ClickSoundDemo />
-</div>
+<iframe src="/demos/clicksound" className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative" />
 
-### Usage
+### Options
+
+| Option     | Type     | Default | Description                                      |
+|------------|----------|---------|--------------------------------------------------|
+| `volume`   | `number` | `0.5`   | Specifies the overall sound volume, from 0 to 1. |
+| `soundUrl` | `string` | `undefined` | A URL to a custom sound file (.mp3 / .wav). |
 
 ```ts
 import { Cursor, ClickSoundPlugin } from 'cursor.js';

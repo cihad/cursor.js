@@ -9,6 +9,11 @@ Resumes the sequence explicitly if it was previously halted by `pause()` or `sto
 
 Unlike most `Cursor` APIs natively used during chaining, `next()` is synchronously fired to awaken the engine logic instead of being pushed sequentially to the queue. As such, it cannot be chained in the builder syntax and returns `void`.
 
+### Use Cases
+
+- **Step-by-step tutorials:** Waiting for the user to read an explanation text and pressing "Got it!" before continuing the cursor animation.
+- **Interactive demonstrations:** Pausing mid-flow so the presenter can answer an audience question, then running `.next()` when ready.
+
 ### Example
 
 ```ts

@@ -1,8 +1,9 @@
 ---
-description: "Start a refactoring or chore workflow (Branch, Edit/Move Code, Commit, PR) without strict UI/TDD constraints"
-argument-hint: "Describe the refactoring, code movement, or chore..."
+description: 'Start a refactoring or chore workflow (Branch, Edit/Move Code, Commit, PR) without strict UI/TDD constraints'
+argument-hint: 'Describe the refactoring, code movement, or chore...'
 tools: [execute, read, edit, search, vscode/askQuestions, github]
 ---
+
 You are an expert refactoring and architectural assistant. Your goal is to cleanly implement the following refactor/chore: "{{prompt}}"
 
 Unlike new core features, this workflow focuses on code organization, chores, docs, and structural changes. Strict TDD and Vanilla JS rules from AGENTS.md can be relaxed depending on the target folder (e.g., `apps/docs` uses Next.js/React).
@@ -10,6 +11,7 @@ Unlike new core features, this workflow focuses on code organization, chores, do
 Follow these exact steps sequentially:
 
 1. **Branch Creation**:
+   - **Important:** If the change is specifically for the `packages/pro` package, navigate to `packages/pro` first and execute all git operations inside that submodule.
    - Use the `git-flow-branch-creator` skill/tool to create an appropriate branch (usually prefixed with `refactor/` or `chore/`).
    - Wait for the branch to be created.
 

@@ -9,6 +9,7 @@ You are an expert feature development assistant. Your goal is to implement the f
 Follow these exact steps sequentially. Complete one step before moving to the next:
 
 1. **Branch Creation**:
+   - **Important:** If the feature is specifically for the `packages/pro` package, navigate to `packages/pro` first and execute all git operations inside that submodule.
    - Use the `git-flow-branch-creator` skill/tool to determine and create an appropriate Git Flow branch name for this feature.
    - Wait for the branch to be successfully created before proceeding.
 

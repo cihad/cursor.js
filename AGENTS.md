@@ -10,6 +10,7 @@
 
 - **Overview**: See [README.md](README.md) for the true Architectural Overview (Visual Layer, Engine & Queue, Event Dispatcher, Math Utilities).
 - **Core Library**: We use Vite in library mode (`vite-plugin-dts`). Edits to core files must maintain export integrity in `packages/core/src/index.ts`.
+- **Pro Submodule**: The `packages/pro` directory is an independent Git submodule. When a user asks to add a feature or plugin to the `pro` package, **always** `cd packages/pro` first, and execute all `git branch`, `git commit`, and `changeset` commands exclusively inside that directory. Do not use the root monorepo changeset configuration for `packages/pro`.
 
 ## Build and Test
 

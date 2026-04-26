@@ -30,7 +30,7 @@ function submodule_workaround {
   echo "Done!"
 
   echo "Updating the registered submodules to match what the superproject expects..."
-  git submodule update --init --recursive --jobs "$(getconf _NPROCESSORS_ONLN)"
+  git submodule update --init --force --recursive --jobs "$(getconf _NPROCESSORS_ONLN)"
   echo "Done!"
 }
 

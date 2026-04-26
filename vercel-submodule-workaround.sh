@@ -16,13 +16,13 @@ function cleanup {
 trap cleanup EXIT
 
 function submodule_workaround {
-  if [ "$GITHUB_REPO_CLONE_TOKEN" == "" ]; then
-    echo "GITHUB_REPO_CLONE_TOKEN is empty!"
+  if [ "$GITHUB_TOKEN" == "" ]; then
+    echo "GITHUB_TOKEN is empty!"
     exit 1
   fi
 
   echo "Monkey patching..."
-  sed -i"$FEXT" "s/git@github.com:/https:\/\/oauth2:${GITHUB_REPO_CLONE_TOKEN}@github.com\//" "$GITMODULES"
+  sed -i"$FEXT" "s|url = \.\./|url = https://oauth2:${GITHUB_TOKEN}@github.com/cursor-js/|" "$GITMODULES"
   echo "Done!"
 
   echo "Synchronising submodules' remote URL configuration..."

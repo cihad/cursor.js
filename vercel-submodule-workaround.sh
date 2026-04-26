@@ -22,8 +22,7 @@ function submodule_workaround {
   fi
 
   echo "Monkey patching..."
-  # url = ../pro.git veya benzer URL'leri değiştirecek şekilde güncellendi
-  git config --file "$GITMODULES" submodule.packages/pro.url "https://oauth2:${GITHUB_REPO_CLONE_TOKEN}@github.com/cursor-js/pro.git"
+  sed -i"$FEXT" "s/git@github.com:/https:\/\/oauth2:${GITHUB_REPO_CLONE_TOKEN}@github.com\//" "$GITMODULES"
   echo "Done!"
 
   echo "Synchronising submodules' remote URL configuration..."

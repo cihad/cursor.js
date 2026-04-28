@@ -1,7 +1,7 @@
 ---
 description: 'Start a refactoring or chore workflow (Branch, Edit/Move Code, Commit, PR) without strict UI/TDD constraints'
 argument-hint: 'Describe the refactoring, code movement, or chore...'
-tools: [execute, read, edit, search, vscode/askQuestions, github]
+tools: [execute, read, edit, search, vscode/askQuestions, github/*]
 ---
 
 You are an expert refactoring and architectural assistant. Your goal is to cleanly implement the following refactor/chore: "{{prompt}}"

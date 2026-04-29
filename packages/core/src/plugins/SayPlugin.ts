@@ -42,7 +42,7 @@ export class SayPlugin implements CursorPlugin {
     };
   }
 
-  private async showBubble(_cursor: Cursor, text: string, options?: SayOptions) {
+  private async showBubble(cursor: Cursor, text: string, options?: SayOptions) {
     const position = options?.position || this.options.defaultPosition || 'cursor';
     
     this.bubbleElement = document.createElement('div');
@@ -56,15 +56,51 @@ export class SayPlugin implements CursorPlugin {
       background: 'white',
       border: '1px solid black',
       padding: '8px',
-      borderRadius: '4px'
+      borderRadius: '4px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      fontSize: '14px',
+      fontFamily: 'sans-serif',
+      pointerEvents: 'none',
+      transition: 'opacity 0.2s ease-in-out',
+      opacity: '0'
     });
 
     document.body.appendChild(this.bubbleElement);
+
+    // Position the bubble
+    if (position === 'cursor') {
+      const cursorRect = cursor.cursor.el.getBoundingClientRect();
+      const x = cursorRect.left + window.scrollX + 20;
+      const y = cursorRect.top + window.scrollY - 10;
+      this.bubbleElement.style.left = `${x}px`;
+      this.bubbleElement.style.top = `${y}px`;
+    } else if (position === 'bottom') {
+      this.bubbleElement.style.position = 'fixed';
+      this.bubbleElement.style.bottom = '20px';
+      this.bubbleElement.style.left = '50%';
+      this.bubbleElement.style.transform = 'translateX(-50%)';
+    } else if (position === 'center') {
+      this.bubbleElement.style.position = 'fixed';
+      this.bubbleElement.style.top = '50%';
+      this.bubbleElement.style.left = '50%';
+      this.bubbleElement.style.transform = 'translate(-50%, -50%)';
+    }
+
+    // Fade in
+    requestAnimationFrame(() => {
+      if (this.bubbleElement) this.bubbleElement.style.opacity = '1';
+    });
 
     // Calculate duration based on text length if not provided
     const duration = options?.duration || Math.max(1000, text.length * 50);
 
     await new Promise(resolve => setTimeout(resolve, duration));
+
+    // Fade out
+    if (this.bubbleElement) {
+      this.bubbleElement.style.opacity = '0';
+      await new Promise(resolve => setTimeout(resolve, 200)); // wait for fade out
+    }
 
     if (this.bubbleElement && this.bubbleElement.parentNode) {
       this.bubbleElement.parentNode.removeChild(this.bubbleElement);

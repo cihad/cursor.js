@@ -5,6 +5,7 @@ export interface SayOptions {
   duration?: number;
   requireClick?: boolean;
   position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
+  speak?: boolean;
 }
 
 declare module '../core/Cursor' {
@@ -20,24 +21,25 @@ export interface SayPluginOptions {
 
 export class SayPlugin implements CursorPlugin {
   name = 'say';
+  public onBeforeSay: ((text: string, options?: SayOptions) => void) | null = null;
+  public onAfterSay: ((text: string) => void) | null = null;
   private options: SayPluginOptions;
   private bubbleElement: HTMLElement | null = null;
-  private bubblePosition: string = 'cursor';
-  private boundMoveHandler: ((x: number, y: number) => void) | null = null;
+  private boundMoveHandler: ((e: MouseEvent) => void) | null = null;
 
   constructor(options: SayPluginOptions = {}) {
     this.options = {
       autoSpeak: false,
       defaultPosition: 'cursor',
-      ...options
+      ...options,
     };
   }
 
   install(cursor: Cursor) {
     const self = this;
-    
+
     // @ts-ignore - Extending the prototype
-    cursor.constructor.prototype.say = function(text: string, options?: SayOptions) {
+    cursor.constructor.prototype.say = function (text: string, options?: SayOptions) {
       return this.addStep(async () => {
         await self.showBubble(this, text, options);
       });
@@ -46,12 +48,11 @@ export class SayPlugin implements CursorPlugin {
 
   private async showBubble(cursor: Cursor, text: string, options?: SayOptions) {
     const position = options?.position || this.options.defaultPosition || 'cursor';
-    this.bubblePosition = position;
-    
+
     this.bubbleElement = document.createElement('div');
     this.bubbleElement.className = `cursor-js-speech-bubble cursor-js-speech-bubble-${position}`;
     this.bubbleElement.textContent = text;
-    
+
     // Common styling
     Object.assign(this.bubbleElement.style, {
       position: 'absolute',
@@ -65,14 +66,14 @@ export class SayPlugin implements CursorPlugin {
       transition: 'opacity 0.2s ease-in-out',
       opacity: '0',
       lineHeight: '1.4',
-      maxWidth: '300px'
+      maxWidth: '300px',
     });
 
     // Position-specific styling
     if (position === 'cursor') {
       Object.assign(this.bubbleElement.style, {
         background: 'rgba(0, 0, 0, 0.85)',
-        color: 'white'
+        color: 'white',
       });
     } else if (position === 'subtitle') {
       Object.assign(this.bubbleElement.style, {
@@ -83,12 +84,12 @@ export class SayPlugin implements CursorPlugin {
         left: '50%',
         transform: 'translateX(-50%)',
         maxWidth: '80%',
-        textAlign: 'center'
+        textAlign: 'center',
       });
     } else {
       Object.assign(this.bubbleElement.style, {
         background: 'rgba(0, 0, 0, 0.85)',
-        color: 'white'
+        color: 'white',
       });
     }
 
@@ -120,12 +121,15 @@ export class SayPlugin implements CursorPlugin {
       if (this.bubbleElement) this.bubbleElement.style.opacity = '1';
     });
 
+    // Trigger onBeforeSay hook (for SpeechPlugin etc.)
+    this.onBeforeSay?.(text, options);
+
     // Track cursor position if in cursor mode
     if (position === 'cursor') {
-      this.boundMoveHandler = (x: number, y: number) => {
+      this.boundMoveHandler = (e: MouseEvent) => {
         if (this.bubbleElement) {
-          this.bubbleElement.style.left = `${x + 30}px`;
-          this.bubbleElement.style.top = `${y - 10}px`;
+          this.bubbleElement.style.left = `${e.clientX + 30}px`;
+          this.bubbleElement.style.top = `${e.clientY - 10}px`;
         }
       };
       document.addEventListener('mousemove', this.boundMoveHandler);
@@ -134,12 +138,12 @@ export class SayPlugin implements CursorPlugin {
     // Calculate duration based on text length if not provided
     const duration = options?.duration || Math.max(1000, text.length * 50);
 
-    await new Promise(resolve => setTimeout(resolve, duration));
+    await new Promise((resolve) => setTimeout(resolve, duration));
 
     // Fade out
     if (this.bubbleElement) {
       this.bubbleElement.style.opacity = '0';
-      await new Promise(resolve => setTimeout(resolve, 200)); // wait for fade out
+      await new Promise((resolve) => setTimeout(resolve, 200)); // wait for fade out
     }
 
     // Remove event listener if in cursor mode
@@ -147,6 +151,9 @@ export class SayPlugin implements CursorPlugin {
       document.removeEventListener('mousemove', this.boundMoveHandler);
       this.boundMoveHandler = null;
     }
+
+    // Trigger onAfterSay hook
+    this.onAfterSay?.(text);
 
     if (this.bubbleElement && this.bubbleElement.parentNode) {
       this.bubbleElement.parentNode.removeChild(this.bubbleElement);

@@ -5,3 +5,4 @@ export * from './IndicatorPlugin';
 export * from './RipplePlugin';
 export * from './ThemePlugin';
 export * from './SayPlugin';
+export * from './SpeechPlugin';

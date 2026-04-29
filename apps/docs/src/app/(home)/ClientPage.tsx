@@ -9,6 +9,7 @@ import {
   ClickSoundPlugin,
   LoggingPlugin,
   SayPlugin,
+  SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
 import { TrailPlugin } from '@cursor.js/pro';
@@ -62,6 +63,7 @@ type SettingsState = {
     logging: boolean;
     trail: boolean;
     say: boolean;
+    speech: boolean;
   };
   rippleConfig: {
     color: string;
@@ -108,6 +110,7 @@ const initialSettings: SettingsState = {
     logging: false,
     trail: true,
     say: true,
+    speech: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -357,6 +360,12 @@ export function ClientPage() {
       c.use(new SayPlugin());
     } else {
       c.removePlugin('say');
+    }
+
+    if (plugins.speech) {
+      c.use(new SpeechPlugin({ enabled: true, lang: 'tr-TR' }));
+    } else {
+      c.removePlugin('speech');
     }
   }, [settings]);
 
@@ -860,9 +869,20 @@ export function ClientPage() {
                     dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'say', enabled: checked })
                   }
                 >
-                  <div className="flex items-center gap-1.5">
-                    Say (Speech Bubble)
-                  </div>
+                  <div className="flex items-center gap-1.5">Say (Speech Bubble)</div>
+                </SettingsSectionHeader>
+              </SettingsSection>
+
+              {/* Speech Plugin Section */}
+              <SettingsSection>
+                <SettingsSectionHeader
+                  id="enable-speech"
+                  checked={settings.plugins.speech}
+                  onCheckedChange={(checked) =>
+                    dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'speech', enabled: checked })
+                  }
+                >
+                  <div className="flex items-center gap-1.5">Speech (Web Speech API)</div>
                 </SettingsSectionHeader>
               </SettingsSection>
 

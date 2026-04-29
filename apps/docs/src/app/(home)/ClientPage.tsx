@@ -179,7 +179,7 @@ export function ClientPage() {
           (ctx) =>
             ctx
               .hover('#demo-email')
-              .say('Let me fill this out for you!', { duration: 2000 })
+              .say('Let me fill this out for you!', { duration: 2000, position: 'subtitle' })
               .wait(300)
               .do(() => isActive && setEmail(''))
               .type('#demo-email', 'hello@cursor.js', { delay: 60 })

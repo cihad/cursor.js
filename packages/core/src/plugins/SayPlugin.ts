@@ -4,7 +4,7 @@ import type { CursorPlugin } from './CursorPlugin';
 export interface SayOptions {
   duration?: number;
   requireClick?: boolean;
-  position?: 'cursor' | 'bottom' | 'center';
+  position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
 }
 
 declare module '../core/Cursor' {
@@ -15,7 +15,7 @@ declare module '../core/Cursor' {
 
 export interface SayPluginOptions {
   autoSpeak?: boolean;
-  defaultPosition?: 'cursor' | 'bottom' | 'center';
+  defaultPosition?: 'cursor' | 'bottom' | 'center' | 'subtitle';
 }
 
 export class SayPlugin implements CursorPlugin {
@@ -84,6 +84,18 @@ export class SayPlugin implements CursorPlugin {
       this.bubbleElement.style.top = '50%';
       this.bubbleElement.style.left = '50%';
       this.bubbleElement.style.transform = 'translate(-50%, -50%)';
+    } else if (position === 'subtitle') {
+      this.bubbleElement.style.position = 'fixed';
+      this.bubbleElement.style.bottom = '40px';
+      this.bubbleElement.style.left = '50%';
+      this.bubbleElement.style.transform = 'translateX(-50%)';
+      this.bubbleElement.style.maxWidth = '80%';
+      this.bubbleElement.style.textAlign = 'center';
+      this.bubbleElement.style.background = 'rgba(0, 0, 0, 0.85)';
+      this.bubbleElement.style.color = 'white';
+      this.bubbleElement.style.borderRadius = '8px';
+      this.bubbleElement.style.fontSize = '16px';
+      this.bubbleElement.style.lineHeight = '1.4';
     }
 
     // Fade in

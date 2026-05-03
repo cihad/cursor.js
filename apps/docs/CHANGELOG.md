@@ -1,5 +1,13 @@
 # docs
 
+## 0.4.2
+
+### Patch Changes
+
+- b98772c: Fix React hydration errors in docs layout by using semantic tags and providing a unique key to patched tree nodes.
+- 158e0a7: fix: allow docs to be versioned to prevent changeset action from crashing with empty commits
+- af89556: Style pro plugins with orange gem icon
+
 ## 0.4.1
 
 ### Patch Changes

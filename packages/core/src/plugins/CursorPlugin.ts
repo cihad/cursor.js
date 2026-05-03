@@ -9,6 +9,7 @@ export interface CursorPlugin {
   onClickStart?: (target: Element) => void;
   onHoverStart?: (target: Element) => void;
   onTypeStart?: (text: string) => void;
+  onTypeEnd?: () => void;
   onStateChange?: (newState: Record<string, any>, oldState: Record<string, any>) => void;
   onDestroy?: () => void;
 }

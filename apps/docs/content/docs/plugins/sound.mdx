@@ -1,0 +1,48 @@
+---
+title: Sound
+description: Adds realistic mouse click and keyboard typing sounds to the cursor interactions.
+---
+
+## SoundPlugin
+
+The `SoundPlugin` plays sound completely synchronized with the cursor's `click()` and `type()` actions, giving users audible feedback.
+
+### Demo
+
+<iframe
+  src="/demos/sound"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+### Options
+
+<auto-type-table
+  path="../../../../../packages/core/src/plugins/SoundPlugin.ts"
+  name="SoundPluginOptions"
+/>
+
+```ts
+import { Cursor, SoundPlugin } from 'cursor.js';
+
+const cursor = new Cursor();
+
+// Install the plugin
+cursor.use(new SoundPlugin());
+
+// The actions will now trigger sounds
+cursor.click('.submit-button');
+cursor.type('.input-field', 'Hello World!');
+```
+
+You can optionally pass custom sound files:
+
+```ts
+cursor.use(
+  new SoundPlugin({
+    clickSoundUrl: '/my-custom-click-sound.mp3',
+    typingSoundUrl: '/my-custom-typing-sound.mp3',
+    volume: 0.8,
+  }),
+);
+```
+

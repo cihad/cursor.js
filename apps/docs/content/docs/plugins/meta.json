@@ -1,4 +1,4 @@
 {
   "title": "Plugins",
-  "pages": ["clicksound", "geminitts", "indicator", "logging", "ripple", "say", "speech", "theme", "trail", "custom-plugins"]
+  "pages": ["sound", "geminitts", "indicator", "logging", "ripple", "say", "speech", "theme", "trail", "custom-plugins"]
 }

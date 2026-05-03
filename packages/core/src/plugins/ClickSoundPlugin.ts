@@ -1,11 +1,17 @@
 import type { Cursor } from '../core/Cursor';
 import type { CursorPlugin } from './CursorPlugin';
 
+/**
+ * @deprecated Use `SoundPlugin` instead. It supports both click and typing sounds.
+ */
 export interface ClickSoundPluginOptions {
   volume?: number;
   soundUrl?: string; // Kullanıcı kendi .mp3 / .wav dosyasını verebilir
 }
 
+/**
+ * @deprecated Use `SoundPlugin` instead. It supports both click and typing sounds.
+ */
 export class ClickSoundPlugin implements CursorPlugin {
   name = 'ClickSoundPlugin';
   private audioContext: AudioContext | null = null;

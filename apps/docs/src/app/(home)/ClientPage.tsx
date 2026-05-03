@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Info } from 'lucide-react';
+import { Info, Gem } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -672,7 +672,10 @@ export function ClientPage() {
                 <AccordionItem value="geminitTts" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-1.5">
-                      Gemini TTS (Pro)
+                      Gemini TTS
+                      <span title="Pro" className="flex items-center">
+                        <Gem className="w-4 h-4 text-orange-500" />
+                      </span>
                       <HoverCard>
                         <HoverCardTrigger asChild>
                           <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
@@ -778,6 +781,9 @@ export function ClientPage() {
                   <SettingsAccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-1.5">
                       Trail
+                      <span title="Pro" className="flex items-center">
+                        <Gem className="w-4 h-4 text-orange-500" />
+                      </span>
                       <HoverCard>
                         <HoverCardTrigger asChild>
                           <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />

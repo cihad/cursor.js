@@ -58,6 +58,15 @@ We welcome contributions to `cursor.js`! Since this project is a Turborepo monor
 4. Commit your changes **along with** the generated `.changeset/*.md` file.
 5. Open a Pull Request! Our automated system will take care of the rest.
 
+## Plugins
+
+Cursor.js supports an extensible plugin system. Some plugins are built-in, while others are available in the Pro package.
+
+- **Core Plugins**: ThemePlugin, IndicatorPlugin, RipplePlugin, ClickSoundPlugin, LoggingPlugin, SayPlugin, SpeechPlugin.
+- **TrailPlugin** <span title="Pro" style="cursor: help;">💎</span>: Adds a magical trail effect to the cursor (Pro).
+- **GeminiTTSPlugin** <span title="Pro" style="cursor: help;">💎</span>: High-quality text-to-speech using Google Gemini (Pro).
+
+## Architectural Overview
 ## Architectural Overview
 
 - **Visual Layer (`packages/core/src/core/GhostCursor.ts`)**: Renders a virtual mouse cursor (`#virtual-cursor`) on the DOM using `position: absolute`. It seamlessly adapts to window scrolling and resizing, matching absolute coordinates `(pageX, pageY)`. Includes an "out of bounds" indicator for tracking the cursor when it scrolls outside the viewport.

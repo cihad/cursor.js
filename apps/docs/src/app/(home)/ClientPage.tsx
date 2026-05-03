@@ -672,7 +672,7 @@ export function ClientPage() {
                 <AccordionItem value="geminitTts" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-orange-500 font-medium">Gemini TTS</span>
+                      Gemini TTS
                       <span title="Pro" className="flex items-center">
                         <Gem className="w-4 h-4 text-orange-500" />
                       </span>
@@ -780,7 +780,7 @@ export function ClientPage() {
                 <AccordionItem value="trail" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-orange-500 font-medium">Trail</span>
+                      Trail
                       <span title="Pro" className="flex items-center">
                         <Gem className="w-4 h-4 text-orange-500" />
                       </span>

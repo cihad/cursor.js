@@ -206,6 +206,13 @@ export function SoundDemo() {
       c.hover('#demo-sound-btn')
         .wait(300)
         .click('#demo-sound-btn')
+        .wait(400)
+        .type('#demo-sound-input', 'hello', { delay: 100 })
+        .wait(400)
+        .do(() => {
+          const input = document.getElementById('demo-sound-input') as HTMLInputElement;
+          if (input) input.value = '';
+        })
         .wait(800)
         .do(() => {
           if (isActive) setTimeout(run, 0);
@@ -242,6 +249,12 @@ export function SoundDemo() {
         >
           Click Target
         </span>
+        <Input 
+          id="demo-sound-input"
+          placeholder="Type here..." 
+          className="w-40 text-center pointer-events-none"
+          readOnly
+        />
       </div>
     </div>
   );

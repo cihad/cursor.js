@@ -10,17 +10,21 @@ function patchTree(node: any): any {
   if (!node) return node;
 
   if (node.type === 'page') {
-    const isPro = PRO_PLUGINS.some(p => node.url && typeof node.url === 'string' && node.url.includes('/plugins/' + p));
+    const isPro = PRO_PLUGINS.some(
+      (p) => node.url && typeof node.url === 'string' && node.url.includes('/plugins/' + p),
+    );
     if (isPro) {
       return {
         ...node,
         name: (
-          <div className="flex items-center gap-1.5 flex-1 line-clamp-1">
-            <span className="truncate">{typeof node.name === 'string' ? node.name : 'Pro Plugin'}</span>
+          <span key={node.url} className="inline-flex items-center gap-1.5 flex-1 line-clamp-1">
+            <span className="truncate">
+              {typeof node.name === 'string' ? node.name : 'Pro Plugin'}
+            </span>
             <span title="Pro" className="shrink-0 flex items-center">
               <Gem className="w-3.5 h-3.5 text-orange-500" />
             </span>
-          </div>
+          </span>
         ),
       };
     }
@@ -43,7 +47,7 @@ function patchTree(node: any): any {
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { nav, ...base } = baseOptions();
-  
+
   const originalTree = source.getPageTree();
   const patchedTree = {
     ...originalTree,

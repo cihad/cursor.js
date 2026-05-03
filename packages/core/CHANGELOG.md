@@ -1,5 +1,11 @@
 # @cursor.js/core
 
+## 0.6.1
+
+### Patch Changes
+
+- f54e3ef: fix: stop typing sound automatically when typing ends and loop it out during long typing sequences
+
 ## 0.6.0
 
 ### Minor Changes

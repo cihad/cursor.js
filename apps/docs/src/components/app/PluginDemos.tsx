@@ -198,7 +198,13 @@ export function SoundDemo() {
     const c = new Cursor({ speed: 0.6 });
     c.use(new RipplePlugin({ size: 30, color: '#10b98180' }));
     if (soundEnabled) {
-      c.use(new SoundPlugin());
+      c.use(
+        new SoundPlugin({
+          volume: 0.5,
+          clickSoundUrl: '/click.mp3',
+          typingSoundUrl: '/typing.mp3',
+        }),
+      );
     }
 
     const run = () => {

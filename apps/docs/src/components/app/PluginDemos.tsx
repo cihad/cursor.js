@@ -6,7 +6,7 @@ import {
   ThemePlugin,
   RipplePlugin,
   IndicatorPlugin,
-  ClickSoundPlugin,
+  SoundPlugin,
   LoggingPlugin,
 } from '@cursor.js/core';
 import { TrailPlugin } from '@cursor.js/pro';
@@ -190,7 +190,7 @@ export function IndicatorDemo() {
   );
 }
 
-export function ClickSoundDemo() {
+export function SoundDemo() {
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   useEffect(() => {
@@ -198,7 +198,7 @@ export function ClickSoundDemo() {
     const c = new Cursor({ speed: 0.6 });
     c.use(new RipplePlugin({ size: 30, color: '#10b98180' }));
     if (soundEnabled) {
-      c.use(new ClickSoundPlugin());
+      c.use(new SoundPlugin());
     }
 
     const run = () => {
@@ -223,7 +223,7 @@ export function ClickSoundDemo() {
 
   return (
     <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
-      <h4 className="text-sm font-semibold mb-2">ClickSound Plugin</h4>
+      <h4 className="text-sm font-semibold mb-2">Sound Plugin</h4>
       <p className="text-xs text-muted-foreground mb-4">
         Immersive keyboard and mouse sound effects.
       </p>

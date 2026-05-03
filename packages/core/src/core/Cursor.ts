@@ -157,6 +157,8 @@ export class Cursor {
           await new Promise((r) => setTimeout(r, delay / 2 + Math.random() * delay)); // Human-like typing delay
         }
       }
+
+      this.plugins.forEach((p) => p.onTypeEnd?.());
     });
   }
 

@@ -6,7 +6,7 @@ import {
   ThemePlugin,
   IndicatorPlugin,
   RipplePlugin,
-  ClickSoundPlugin,
+  SoundPlugin,
   LoggingPlugin,
   SayPlugin,
   SpeechPlugin,
@@ -48,7 +48,7 @@ import {
   RippleDemo,
   ThemeDemo,
   IndicatorDemo,
-  ClickSoundDemo,
+  SoundDemo,
   LoggingDemo,
 } from '@/components/app/PluginDemos';
 
@@ -67,7 +67,7 @@ type SettingsState = {
     theme: boolean;
     ripple: boolean;
     indicator: boolean;
-    clickSound: boolean;
+    sound: boolean;
     logging: boolean;
     trail: boolean;
     say: boolean;
@@ -85,9 +85,10 @@ type SettingsState = {
     color: string;
     fadeDuration: number;
   };
-  clickSoundConfig: {
+  soundConfig: {
     volume: number;
-    soundUrl: string;
+    clickSoundUrl: string;
+    typingSoundUrl: string;
   };
   geminiTtsConfig: {
     speaker: string;
@@ -113,8 +114,8 @@ type SettingsAction =
       value: string | number;
     }
   | {
-      type: 'UPDATE_CLICKSOUND_CONFIG';
-      key: keyof SettingsState['clickSoundConfig'];
+      type: 'UPDATE_SOUND_CONFIG';
+      key: keyof SettingsState['soundConfig'];
       value: string | number;
     }
   | {
@@ -133,7 +134,7 @@ const initialSettings: SettingsState = {
     theme: true,
     ripple: true,
     indicator: true,
-    clickSound: false,
+    sound: false,
     logging: false,
     trail: true,
     say: true,
@@ -151,9 +152,10 @@ const initialSettings: SettingsState = {
     color: '#0099ff',
     fadeDuration: 500,
   },
-  clickSoundConfig: {
+  soundConfig: {
     volume: 0.5,
-    soundUrl: '/click.mp3',
+    clickSoundUrl: '/click.mp3',
+    typingSoundUrl: '/typing.mp3',
   },
   geminiTtsConfig: {
     speaker: 'Achernar',
@@ -171,10 +173,10 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       return { ...state, rippleConfig: { ...state.rippleConfig, [action.key]: action.value } };
     case 'UPDATE_TRAIL_CONFIG':
       return { ...state, trailConfig: { ...state.trailConfig, [action.key]: action.value } };
-    case 'UPDATE_CLICKSOUND_CONFIG':
+    case 'UPDATE_SOUND_CONFIG':
       return {
         ...state,
-        clickSoundConfig: { ...state.clickSoundConfig, [action.key]: action.value },
+        soundConfig: { ...state.soundConfig, [action.key]: action.value },
       };
     case 'UPDATE_GEMINI_TTS_CONFIG':
       return {
@@ -292,7 +294,7 @@ export function ClientPage() {
     const c = actorRef.current;
     if (!c) return;
 
-    const { coreConfig, plugins, rippleConfig, trailConfig, clickSoundConfig, geminiTtsConfig } =
+    const { coreConfig, plugins, rippleConfig, trailConfig, soundConfig, geminiTtsConfig } =
       settings;
 
     c.setState({ humanize: coreConfig.humanize, speed: coreConfig.speed, size: coreConfig.size });
@@ -374,16 +376,17 @@ export function ClientPage() {
       c.removePlugin('LoggingPlugin');
     }
 
-    if (plugins.clickSound) {
-      c.removePlugin('ClickSoundPlugin');
+    if (plugins.sound) {
+      c.removePlugin('SoundPlugin');
       c.use(
-        new ClickSoundPlugin({
-          volume: clickSoundConfig.volume,
-          soundUrl: clickSoundConfig.soundUrl,
+        new SoundPlugin({
+          volume: soundConfig.volume,
+          clickSoundUrl: soundConfig.clickSoundUrl,
+          typingSoundUrl: soundConfig.typingSoundUrl,
         }),
       );
     } else {
-      c.removePlugin('ClickSoundPlugin');
+      c.removePlugin('SoundPlugin');
     }
 
     if (plugins.ripple) {
@@ -1047,11 +1050,11 @@ export function ClientPage() {
                   </div>
                 </AccordionItem>
 
-                {/* ClickSound Plugin */}
-                <AccordionItem value="clicksound" className="relative">
+                {/* Sound Plugin */}
+                <AccordionItem value="sound" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-1.5">
-                      ClickSound
+                      Sound
                       <HoverCard>
                         <HoverCardTrigger asChild>
                           <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
@@ -1061,7 +1064,7 @@ export function ClientPage() {
                           className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
                         >
                           <iframe
-                            src="/demos/clicksound"
+                            src="/demos/sound"
                             className="w-full h-full border-0 overflow-hidden"
                             scrolling="no"
                           />
@@ -1071,12 +1074,12 @@ export function ClientPage() {
                   </SettingsAccordionTrigger>
                   <div className="absolute right-0 top-4">
                     <Switch
-                      id="enable-clicksound"
-                      checked={settings.plugins.clickSound}
+                      id="enable-sound"
+                      checked={settings.plugins.sound}
                       onCheckedChange={(checked) =>
                         dispatch({
                           type: 'TOGGLE_PLUGIN',
-                          plugin: 'clickSound',
+                          plugin: 'sound',
                           enabled: checked,
                         })
                       }
@@ -1085,20 +1088,20 @@ export function ClientPage() {
                   <SettingsAccordionContent>
                     <div className="space-y-2 py-2">
                       <div className="flex flex-row items-center justify-between gap-2">
-                        <Label htmlFor="clicksound-volume" className="text-xs font-normal">
+                        <Label htmlFor="sound-volume" className="text-xs font-normal">
                           volume
                         </Label>
                         <InputGroup className="h-7 w-24">
                           <InputGroupInput
-                            id="clicksound-volume"
+                            id="sound-volume"
                             type="number"
                             min={0}
                             max={1}
                             step={0.1}
-                            value={settings.clickSoundConfig.volume}
+                            value={settings.soundConfig.volume}
                             onChange={(e) =>
                               dispatch({
-                                type: 'UPDATE_CLICKSOUND_CONFIG',
+                                type: 'UPDATE_SOUND_CONFIG',
                                 key: 'volume',
                                 value: Number(e.target.value),
                               })
@@ -1107,18 +1110,37 @@ export function ClientPage() {
                         </InputGroup>
                       </div>
                       <div className="flex flex-row items-center justify-between gap-2">
-                        <Label htmlFor="clicksound-url" className="text-xs font-normal">
-                          soundUrl
+                        <Label htmlFor="sound-url" className="text-xs font-normal">
+                          clickSoundUrl
                         </Label>
                         <InputGroup className="h-7 w-full max-w-[12rem]">
                           <InputGroupInput
-                            id="clicksound-url"
+                            id="sound-url"
                             type="text"
-                            value={settings.clickSoundConfig.soundUrl}
+                            value={settings.soundConfig.clickSoundUrl}
                             onChange={(e) =>
                               dispatch({
-                                type: 'UPDATE_CLICKSOUND_CONFIG',
-                                key: 'soundUrl',
+                                type: 'UPDATE_SOUND_CONFIG',
+                                key: 'clickSoundUrl',
+                                value: e.target.value,
+                              })
+                            }
+                          />
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="typing-sound-url" className="text-xs font-normal">
+                          typingSoundUrl
+                        </Label>
+                        <InputGroup className="h-7 w-full max-w-[12rem]">
+                          <InputGroupInput
+                            id="typing-sound-url"
+                            type="text"
+                            value={settings.soundConfig.typingSoundUrl}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_SOUND_CONFIG',
+                                key: 'typingSoundUrl',
                                 value: e.target.value,
                               })
                             }

@@ -6,7 +6,7 @@ import {
   ThemeDemo,
   RippleDemo,
   IndicatorDemo,
-  ClickSoundDemo,
+  SoundDemo,
   LoggingDemo,
 } from '@/components/app/PluginDemos';
 
@@ -18,7 +18,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ThemeDemo,
     RippleDemo,
     IndicatorDemo,
-    ClickSoundDemo,
+    SoundDemo,
     LoggingDemo,
     ...components,
   } satisfies MDXComponents;

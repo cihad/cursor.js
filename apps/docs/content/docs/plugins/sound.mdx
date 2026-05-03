@@ -3,31 +3,31 @@ title: Click Sound
 description: Adds realistic mouse click sounds to the cursor interactions.
 ---
 
-## ClickSoundPlugin
+## SoundPlugin
 
-The `ClickSoundPlugin` plays sound completely synchronized with the cursor's `click()` actions, giving user the audible feedback.
+The `SoundPlugin` plays sound completely synchronized with the cursor's `click()` actions, giving user the audible feedback.
 
 ### Demo
 
 <iframe
-  src="/demos/clicksound"
+  src="/demos/sound"
   className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
 />
 
 ### Options
 
 <auto-type-table
-  path="../../../../../packages/core/src/plugins/ClickSoundPlugin.ts"
-  name="ClickSoundPluginOptions"
+  path="../../../../../packages/core/src/plugins/SoundPlugin.ts"
+  name="SoundPluginOptions"
 />
 
 ```ts
-import { Cursor, ClickSoundPlugin } from 'cursor.js';
+import { Cursor, SoundPlugin } from 'cursor.js';
 
 const cursor = new Cursor();
 
 // Install the plugin
-cursor.use(new ClickSoundPlugin());
+cursor.use(new SoundPlugin());
 
 // The click action will now trigger a sound
 cursor.click('.submit-button');
@@ -37,7 +37,7 @@ You can optionally pass an `audioUrl` option to customize the click sound:
 
 ```ts
 cursor.use(
-  new ClickSoundPlugin({
+  new SoundPlugin({
     audioUrl: '/my-custom-click-sound.mp3',
     volume: 0.8,
   }),

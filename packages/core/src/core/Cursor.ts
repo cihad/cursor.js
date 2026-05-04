@@ -99,8 +99,19 @@ export class Cursor {
       rect.left < 0 ||
       rect.right > window.innerWidth
     ) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      await new Promise((r) => setTimeout(r, 500));
+      let scrollHandled = false;
+      for (const p of this.plugins) {
+        if (p.onScroll) {
+          const result = p.onScroll(element);
+          scrollHandled = result instanceof Promise ? await result : result;
+          if (scrollHandled) break;
+        }
+      }
+
+      if (!scrollHandled) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        await new Promise((r) => setTimeout(r, 500));
+      }
       const newRect = element.getBoundingClientRect();
       await this.moveGhostCursorTo(
         newRect.left + window.scrollX + newRect.width / 2,

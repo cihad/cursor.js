@@ -36,4 +36,17 @@ export const GeminiTTSPlugin = class {
   install() {}
 };
 
+export const ParticlePlugin = class {
+  name = 'particle-mock';
+  constructor(args: any) {}
+  install() {}
+  destroy() {}
+};
+
+export const ScrollIllusionPlugin = class {
+  name = 'scroll-illusion-mock';
+  constructor(args: any) {}
+  install() {}
+};
+
 export default mockProxy;

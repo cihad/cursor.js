@@ -12,7 +12,7 @@ import {
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
-import { TrailPlugin, GeminiTTSPlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin, ScrollIllusionPlugin } from '@cursor.js/pro';
 
 import {
   Carousel,
@@ -70,9 +70,11 @@ type SettingsState = {
     sound: boolean;
     logging: boolean;
     trail: boolean;
+    particle: boolean;
     say: boolean;
     speech: boolean;
     geminiTts: boolean;
+    scrollIllusion: boolean;
   };
   rippleConfig: {
     color: string;
@@ -85,6 +87,13 @@ type SettingsState = {
     color: string;
     fadeDuration: number;
   };
+  particleConfig: {
+    size: number;
+    color: string;
+    duration: number;
+    particleCount: number;
+    scatterDistance: number;
+  };
   soundConfig: {
     volume: number;
     clickSoundUrl: string;
@@ -93,6 +102,10 @@ type SettingsState = {
   geminiTtsConfig: {
     speaker: string;
     language: string;
+  };
+  scrollIllusionConfig: {
+    duration: number;
+    scrollbarOffset: number;
   };
 };
 
@@ -114,6 +127,11 @@ type SettingsAction =
       value: string | number;
     }
   | {
+      type: 'UPDATE_PARTICLE_CONFIG';
+      key: keyof SettingsState['particleConfig'];
+      value: string | number;
+    }
+  | {
       type: 'UPDATE_SOUND_CONFIG';
       key: keyof SettingsState['soundConfig'];
       value: string | number;
@@ -122,6 +140,11 @@ type SettingsAction =
       type: 'UPDATE_GEMINI_TTS_CONFIG';
       key: keyof SettingsState['geminiTtsConfig'];
       value: string;
+    }
+  | {
+      type: 'UPDATE_SCROLL_ILLUSION_CONFIG';
+      key: keyof SettingsState['scrollIllusionConfig'];
+      value: string | number;
     };
 
 const initialSettings: SettingsState = {
@@ -137,9 +160,11 @@ const initialSettings: SettingsState = {
     sound: false,
     logging: false,
     trail: true,
+    particle: true,
     say: true,
     speech: false,
     geminiTts: true,
+    scrollIllusion: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -152,6 +177,13 @@ const initialSettings: SettingsState = {
     color: '#0099ff',
     fadeDuration: 500,
   },
+  particleConfig: {
+    size: 6,
+    color: '#0099ff',
+    duration: 600,
+    particleCount: 5,
+    scatterDistance: 30,
+  },
   soundConfig: {
     volume: 0.5,
     clickSoundUrl: '/click.mp3',
@@ -160,6 +192,10 @@ const initialSettings: SettingsState = {
   geminiTtsConfig: {
     speaker: 'Achernar',
     language: 'en',
+  },
+  scrollIllusionConfig: {
+    duration: 800,
+    scrollbarOffset: 10,
   },
 };
 
@@ -173,6 +209,8 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       return { ...state, rippleConfig: { ...state.rippleConfig, [action.key]: action.value } };
     case 'UPDATE_TRAIL_CONFIG':
       return { ...state, trailConfig: { ...state.trailConfig, [action.key]: action.value } };
+    case 'UPDATE_PARTICLE_CONFIG':
+      return { ...state, particleConfig: { ...state.particleConfig, [action.key]: action.value } };
     case 'UPDATE_SOUND_CONFIG':
       return {
         ...state,
@@ -182,6 +220,11 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       return {
         ...state,
         geminiTtsConfig: { ...state.geminiTtsConfig, [action.key]: action.value },
+      };
+    case 'UPDATE_SCROLL_ILLUSION_CONFIG':
+      return {
+        ...state,
+        scrollIllusionConfig: { ...state.scrollIllusionConfig, [action.key]: action.value },
       };
     default:
       return state;
@@ -269,6 +312,9 @@ export function ClientPage() {
         .wait(400)
         .click('#demo-accordion-2')
         .wait(1000)
+        .hover('#scroll-illusion-target')
+        .say('I also handle native scrolls effortlessly!', { duration: 2500 })
+        .wait(2000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
         .do(() => {
@@ -294,7 +340,7 @@ export function ClientPage() {
     const c = actorRef.current;
     if (!c) return;
 
-    const { coreConfig, plugins, rippleConfig, trailConfig, soundConfig, geminiTtsConfig } =
+    const { coreConfig, plugins, rippleConfig, trailConfig, soundConfig, geminiTtsConfig, scrollIllusionConfig } =
       settings;
 
     c.setState({ humanize: coreConfig.humanize, speed: coreConfig.speed, size: coreConfig.size });
@@ -416,6 +462,21 @@ export function ClientPage() {
       c.removePlugin('trail');
     }
 
+    if (plugins.particle) {
+      c.removePlugin('particle');
+      c.use(
+        new ParticlePlugin({
+          size: settings.particleConfig.size,
+          color: settings.particleConfig.color,
+          duration: settings.particleConfig.duration,
+          particleCount: settings.particleConfig.particleCount,
+          scatterDistance: settings.particleConfig.scatterDistance,
+        }),
+      );
+    } else {
+      c.removePlugin('particle');
+    }
+
     if (plugins.say) {
       c.removePlugin('say');
       c.use(new SayPlugin());
@@ -442,6 +503,18 @@ export function ClientPage() {
       );
     } else {
       c.removePlugin('gemini-tts');
+    }
+
+    if (plugins.scrollIllusion) {
+      c.removePlugin('scroll-illusion');
+      c.use(
+        new ScrollIllusionPlugin({
+          duration: scrollIllusionConfig.duration,
+          scrollbarOffset: scrollIllusionConfig.scrollbarOffset,
+        }),
+      );
+    } else {
+      c.removePlugin('scroll-illusion');
     }
   }, [settings]);
 
@@ -911,6 +984,186 @@ export function ClientPage() {
                   </SettingsAccordionContent>
                 </AccordionItem>
 
+                {/* Particle Plugin */}
+                <AccordionItem value="particle" className="relative">
+                  <SettingsAccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-1.5">
+                      Particle
+                      <span title="Pro" className="flex items-center">
+                        <Gem className="w-4 h-4 text-orange-500" />
+                      </span>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          side="left"
+                          className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                        >
+                          <iframe
+                            src="/demos/particle"
+                            className="w-full h-full border-0 overflow-hidden"
+                            scrolling="no"
+                          />
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
+                  </SettingsAccordionTrigger>
+                  <div className="absolute right-0 top-4">
+                    <Switch
+                      id="enable-particle"
+                      checked={settings.plugins.particle}
+                      onCheckedChange={(checked) =>
+                        dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'particle', enabled: checked })
+                      }
+                    />
+                  </div>
+                  <SettingsAccordionContent>
+                    <div className="space-y-2 py-2">
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-size" className="text-xs font-normal">
+                          size
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="particle-size"
+                            type="number"
+                            min={1}
+                            max={20}
+                            step={1}
+                            value={settings.particleConfig.size}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'size',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">px</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-color" className="text-xs font-normal">
+                          color
+                        </Label>
+                        <InputGroup className="h-7 w-28">
+                          <InputGroupInput
+                            className="w-10"
+                            id="particle-color"
+                            type="color"
+                            value={settings.particleConfig.color}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'color',
+                                value: e.target.value,
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">
+                            {settings.particleConfig.color}
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-duration" className="text-xs font-normal">
+                          duration
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="particle-duration"
+                            type="number"
+                            min={100}
+                            max={2000}
+                            step={100}
+                            value={settings.particleConfig.duration}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'duration',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">ms</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                    </div>
+                  </SettingsAccordionContent>
+                </AccordionItem>
+
+                {/* Scroll Illusion Plugin */}
+                <AccordionItem value="scrollIllusion" className="relative">
+                  <SettingsAccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-1.5">
+                      Scroll Illusion
+                      <span title="Pro" className="flex items-center">
+                        <Gem className="w-4 h-4 text-orange-500" />
+                      </span>
+                    </div>
+                  </SettingsAccordionTrigger>
+                  <div className="absolute right-0 top-4">
+                    <Switch
+                      id="enable-scroll-illusion"
+                      checked={settings.plugins.scrollIllusion}
+                      onCheckedChange={(checked) =>
+                        dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'scrollIllusion', enabled: checked })
+                      }
+                    />
+                  </div>
+                  <SettingsAccordionContent>
+                    <div className="space-y-2 py-2">
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="scroll-illusion-duration" className="text-xs font-normal">
+                          duration
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="scroll-illusion-duration"
+                            type="number"
+                            min={100}
+                            max={3000}
+                            step={100}
+                            value={settings.scrollIllusionConfig.duration}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_SCROLL_ILLUSION_CONFIG',
+                                key: 'duration',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">ms</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="scroll-illusion-offset" className="text-xs font-normal">
+                          scrollbarOffset
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="scroll-illusion-offset"
+                            type="number"
+                            min={0}
+                            max={50}
+                            step={1}
+                            value={settings.scrollIllusionConfig.scrollbarOffset}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_SCROLL_ILLUSION_CONFIG',
+                                key: 'scrollbarOffset',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">px</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                    </div>
+                  </SettingsAccordionContent>
+                </AccordionItem>
+
                 {/* Ripple Plugin */}
                 <AccordionItem value="ripple" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
@@ -1218,6 +1471,16 @@ export function ClientPage() {
               </Accordion>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Scroll Illusion Demo Target */}
+        <section className="container mx-auto py-12 px-6">
+          <div
+            id="scroll-illusion-target"
+            className="flex items-center justify-center p-12 mt-48 mb-32 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 text-muted-foreground/50 italic text-sm"
+          >
+            Scroll Illusion Target Element
+          </div>
         </section>
       </main>
     </div>

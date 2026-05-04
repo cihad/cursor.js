@@ -1,4 +1,16 @@
 {
   "title": "Plugins",
-  "pages": ["sound", "geminitts", "indicator", "logging", "ripple", "say", "speech", "theme", "trail", "custom-plugins"]
+  "pages": [
+    "sound",
+    "geminitts",
+    "indicator",
+    "logging",
+    "ripple",
+    "say",
+    "speech",
+    "theme",
+    "trail",
+    "particle",
+    "custom-plugins"
+  ]
 }

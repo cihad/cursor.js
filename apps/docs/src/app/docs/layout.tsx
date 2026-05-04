@@ -4,7 +4,7 @@ import { baseOptions } from '@/lib/layout.shared';
 import type { ReactNode } from 'react';
 import { Gem } from 'lucide-react';
 
-const PRO_PLUGINS = ['trail', 'geminitts'];
+const PRO_PLUGINS = ['trail', 'geminitts', 'particle'];
 
 function patchTree(node: any): any {
   if (!node) return node;

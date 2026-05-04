@@ -9,7 +9,7 @@ import {
   SoundPlugin,
   LoggingPlugin,
 } from '@cursor.js/core';
-import { TrailPlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin } from '@cursor.js/pro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -123,6 +123,60 @@ export function RippleDemo() {
       <div className="space-y-3">
         <Input id="demo-ripple-input" placeholder="Watch the ripple..." />
         <Button id="demo-ripple-button" className="w-full">
+          Click Here
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function ParticleDemo() {
+  useEffect(() => {
+    let isActive = true;
+    const c = new Cursor({ speed: 0.8 });
+    c.use(new ParticlePlugin({ color: '#f59e0b', size: 6, particleCount: 12 }));
+
+    const run = () => {
+      if (!isActive) return;
+      c.setState({ particle: { color: '#f59e0b' } })
+        .hover('#demo-particle-input')
+        .wait(300)
+        .click('#demo-particle-input')
+        .type('#demo-particle-input', 'Particle test', { delay: 30 })
+        .wait(500)
+        .setState({ particle: { color: '#ec4899', particleCount: 20 } })
+        .hover('#demo-particle-button')
+        .wait(300)
+        .click('#demo-particle-button')
+        .wait(500)
+        .do(
+          () =>
+            isActive &&
+            (document.querySelector<HTMLInputElement>('#demo-particle-input')!.value = ''),
+        )
+        .do(() => {
+          if (isActive) setTimeout(run, 0);
+        });
+    };
+
+    c.setState({ size: 1 });
+    c.wait(200).do(() => run());
+
+    return () => {
+      isActive = false;
+      c.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
+      <h4 className="text-sm font-semibold mb-2">Particle Plugin</h4>
+      <p className="text-xs text-muted-foreground mb-4">
+        A subtle, visually pleasing particle explosion effect around your cursor whenever you click.
+      </p>
+      <div className="space-y-3">
+        <Input id="demo-particle-input" placeholder="Watch the particles..." />
+        <Button id="demo-particle-button" className="w-full">
           Click Here
         </Button>
       </div>

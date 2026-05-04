@@ -12,7 +12,7 @@ import {
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
-import { TrailPlugin, GeminiTTSPlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin } from '@cursor.js/pro';
 
 import {
   Carousel,
@@ -70,6 +70,7 @@ type SettingsState = {
     sound: boolean;
     logging: boolean;
     trail: boolean;
+    particle: boolean;
     say: boolean;
     speech: boolean;
     geminiTts: boolean;
@@ -84,6 +85,13 @@ type SettingsState = {
     thickness: number;
     color: string;
     fadeDuration: number;
+  };
+  particleConfig: {
+    size: number;
+    color: string;
+    duration: number;
+    particleCount: number;
+    scatterDistance: number;
   };
   soundConfig: {
     volume: number;
@@ -114,6 +122,11 @@ type SettingsAction =
       value: string | number;
     }
   | {
+      type: 'UPDATE_PARTICLE_CONFIG';
+      key: keyof SettingsState['particleConfig'];
+      value: string | number;
+    }
+  | {
       type: 'UPDATE_SOUND_CONFIG';
       key: keyof SettingsState['soundConfig'];
       value: string | number;
@@ -137,6 +150,7 @@ const initialSettings: SettingsState = {
     sound: false,
     logging: false,
     trail: true,
+    particle: true,
     say: true,
     speech: false,
     geminiTts: true,
@@ -151,6 +165,13 @@ const initialSettings: SettingsState = {
     thickness: 20,
     color: '#0099ff',
     fadeDuration: 500,
+  },
+  particleConfig: {
+    size: 6,
+    color: '#0099ff',
+    duration: 600,
+    particleCount: 5,
+    scatterDistance: 30,
   },
   soundConfig: {
     volume: 0.5,
@@ -173,6 +194,8 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       return { ...state, rippleConfig: { ...state.rippleConfig, [action.key]: action.value } };
     case 'UPDATE_TRAIL_CONFIG':
       return { ...state, trailConfig: { ...state.trailConfig, [action.key]: action.value } };
+    case 'UPDATE_PARTICLE_CONFIG':
+      return { ...state, particleConfig: { ...state.particleConfig, [action.key]: action.value } };
     case 'UPDATE_SOUND_CONFIG':
       return {
         ...state,
@@ -414,6 +437,21 @@ export function ClientPage() {
       );
     } else {
       c.removePlugin('trail');
+    }
+
+    if (plugins.particle) {
+      c.removePlugin('particle');
+      c.use(
+        new ParticlePlugin({
+          size: settings.particleConfig.size,
+          color: settings.particleConfig.color,
+          duration: settings.particleConfig.duration,
+          particleCount: settings.particleConfig.particleCount,
+          scatterDistance: settings.particleConfig.scatterDistance,
+        }),
+      );
+    } else {
+      c.removePlugin('particle');
     }
 
     if (plugins.say) {
@@ -911,6 +949,114 @@ export function ClientPage() {
                   </SettingsAccordionContent>
                 </AccordionItem>
 
+                {/* Particle Plugin */}
+                <AccordionItem value="particle" className="relative">
+                  <SettingsAccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-1.5">
+                      Particle
+                      <span title="Pro" className="flex items-center">
+                        <Gem className="w-4 h-4 text-orange-500" />
+                      </span>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          side="left"
+                          className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                        >
+                          <iframe
+                            src="/demos/particle"
+                            className="w-full h-full border-0 overflow-hidden"
+                            scrolling="no"
+                          />
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
+                  </SettingsAccordionTrigger>
+                  <div className="absolute right-0 top-4">
+                    <Switch
+                      id="enable-particle"
+                      checked={settings.plugins.particle}
+                      onCheckedChange={(checked) =>
+                        dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'particle', enabled: checked })
+                      }
+                    />
+                  </div>
+                  <SettingsAccordionContent>
+                    <div className="space-y-2 py-2">
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-size" className="text-xs font-normal">
+                          size
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="particle-size"
+                            type="number"
+                            min={1}
+                            max={20}
+                            step={1}
+                            value={settings.particleConfig.size}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'size',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">px</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-color" className="text-xs font-normal">
+                          color
+                        </Label>
+                        <InputGroup className="h-7 w-28">
+                          <InputGroupInput
+                            className="w-10"
+                            id="particle-color"
+                            type="color"
+                            value={settings.particleConfig.color}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'color',
+                                value: e.target.value,
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">
+                            {settings.particleConfig.color}
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <Label htmlFor="particle-duration" className="text-xs font-normal">
+                          duration
+                        </Label>
+                        <InputGroup className="h-7 w-24">
+                          <InputGroupInput
+                            id="particle-duration"
+                            type="number"
+                            min={100}
+                            max={2000}
+                            step={100}
+                            value={settings.particleConfig.duration}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'UPDATE_PARTICLE_CONFIG',
+                                key: 'duration',
+                                value: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <InputGroupAddon align="inline-end">ms</InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                    </div>
+                  </SettingsAccordionContent>
+                </AccordionItem>
                 {/* Ripple Plugin */}
                 <AccordionItem value="ripple" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">

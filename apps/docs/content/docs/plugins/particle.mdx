@@ -1,0 +1,43 @@
+---
+title: Particle
+description: Add a minimalistic particle scattering effect that triggers on clicks.
+---
+
+## ParticlePlugin
+
+The `ParticlePlugin` adds a subtle, visually pleasing particle explosion effect around your cursor whenever you click.
+(Only emits on virtual cursor actions, ignoring real user clicks).
+
+### Demo
+
+<iframe
+  src="/demos/particle"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+### Options
+
+<auto-type-table
+  path="../../../../../packages/pro/src/ParticlePlugin.ts"
+  name="ParticlePluginOptions"
+/>
+
+### Usage
+
+```ts
+import { Cursor } from '@cursor.js/core';
+import { ParticlePlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(
+  new ParticlePlugin({
+    size: 6, // Size of each particle in px
+    color: '#0099ff', // Background color of the particles
+    duration: 600, // Duration of the scatter animation in ms
+    particleCount: 12, // Number of particles spawned per click
+    scatterDistance: 40, // Maximum distance the particles will travel
+  }),
+);
+
+cursor.click('.button');
+```

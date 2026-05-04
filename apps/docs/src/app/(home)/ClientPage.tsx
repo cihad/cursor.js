@@ -12,7 +12,7 @@ import {
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin, ScrollIllusionPlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin } from '@cursor.js/pro';
 
 import {
   Carousel,
@@ -74,7 +74,6 @@ type SettingsState = {
     say: boolean;
     speech: boolean;
     geminiTts: boolean;
-    scrollIllusion: boolean;
   };
   rippleConfig: {
     color: string;
@@ -102,10 +101,6 @@ type SettingsState = {
   geminiTtsConfig: {
     speaker: string;
     language: string;
-  };
-  scrollIllusionConfig: {
-    duration: number;
-    scrollbarOffset: number;
   };
 };
 
@@ -140,11 +135,6 @@ type SettingsAction =
       type: 'UPDATE_GEMINI_TTS_CONFIG';
       key: keyof SettingsState['geminiTtsConfig'];
       value: string;
-    }
-  | {
-      type: 'UPDATE_SCROLL_ILLUSION_CONFIG';
-      key: keyof SettingsState['scrollIllusionConfig'];
-      value: string | number;
     };
 
 const initialSettings: SettingsState = {
@@ -164,7 +154,6 @@ const initialSettings: SettingsState = {
     say: true,
     speech: false,
     geminiTts: true,
-    scrollIllusion: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -193,10 +182,6 @@ const initialSettings: SettingsState = {
     speaker: 'Achernar',
     language: 'en',
   },
-  scrollIllusionConfig: {
-    duration: 800,
-    scrollbarOffset: 10,
-  },
 };
 
 function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
@@ -220,11 +205,6 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       return {
         ...state,
         geminiTtsConfig: { ...state.geminiTtsConfig, [action.key]: action.value },
-      };
-    case 'UPDATE_SCROLL_ILLUSION_CONFIG':
-      return {
-        ...state,
-        scrollIllusionConfig: { ...state.scrollIllusionConfig, [action.key]: action.value },
       };
     default:
       return state;
@@ -312,9 +292,6 @@ export function ClientPage() {
         .wait(400)
         .click('#demo-accordion-2')
         .wait(1000)
-        .hover('#scroll-illusion-target')
-        .say('I also handle native scrolls effortlessly!', { duration: 2500 })
-        .wait(2000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
         .do(() => {
@@ -340,7 +317,7 @@ export function ClientPage() {
     const c = actorRef.current;
     if (!c) return;
 
-    const { coreConfig, plugins, rippleConfig, trailConfig, soundConfig, geminiTtsConfig, scrollIllusionConfig } =
+    const { coreConfig, plugins, rippleConfig, trailConfig, soundConfig, geminiTtsConfig } =
       settings;
 
     c.setState({ humanize: coreConfig.humanize, speed: coreConfig.speed, size: coreConfig.size });
@@ -503,18 +480,6 @@ export function ClientPage() {
       );
     } else {
       c.removePlugin('gemini-tts');
-    }
-
-    if (plugins.scrollIllusion) {
-      c.removePlugin('scroll-illusion');
-      c.use(
-        new ScrollIllusionPlugin({
-          duration: scrollIllusionConfig.duration,
-          scrollbarOffset: scrollIllusionConfig.scrollbarOffset,
-        }),
-      );
-    } else {
-      c.removePlugin('scroll-illusion');
     }
   }, [settings]);
 
@@ -1092,78 +1057,6 @@ export function ClientPage() {
                     </div>
                   </SettingsAccordionContent>
                 </AccordionItem>
-
-                {/* Scroll Illusion Plugin */}
-                <AccordionItem value="scrollIllusion" className="relative">
-                  <SettingsAccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-1.5">
-                      Scroll Illusion
-                      <span title="Pro" className="flex items-center">
-                        <Gem className="w-4 h-4 text-orange-500" />
-                      </span>
-                    </div>
-                  </SettingsAccordionTrigger>
-                  <div className="absolute right-0 top-4">
-                    <Switch
-                      id="enable-scroll-illusion"
-                      checked={settings.plugins.scrollIllusion}
-                      onCheckedChange={(checked) =>
-                        dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'scrollIllusion', enabled: checked })
-                      }
-                    />
-                  </div>
-                  <SettingsAccordionContent>
-                    <div className="space-y-2 py-2">
-                      <div className="flex flex-row items-center justify-between gap-2">
-                        <Label htmlFor="scroll-illusion-duration" className="text-xs font-normal">
-                          duration
-                        </Label>
-                        <InputGroup className="h-7 w-24">
-                          <InputGroupInput
-                            id="scroll-illusion-duration"
-                            type="number"
-                            min={100}
-                            max={3000}
-                            step={100}
-                            value={settings.scrollIllusionConfig.duration}
-                            onChange={(e) =>
-                              dispatch({
-                                type: 'UPDATE_SCROLL_ILLUSION_CONFIG',
-                                key: 'duration',
-                                value: Number(e.target.value),
-                              })
-                            }
-                          />
-                          <InputGroupAddon align="inline-end">ms</InputGroupAddon>
-                        </InputGroup>
-                      </div>
-                      <div className="flex flex-row items-center justify-between gap-2">
-                        <Label htmlFor="scroll-illusion-offset" className="text-xs font-normal">
-                          scrollbarOffset
-                        </Label>
-                        <InputGroup className="h-7 w-24">
-                          <InputGroupInput
-                            id="scroll-illusion-offset"
-                            type="number"
-                            min={0}
-                            max={50}
-                            step={1}
-                            value={settings.scrollIllusionConfig.scrollbarOffset}
-                            onChange={(e) =>
-                              dispatch({
-                                type: 'UPDATE_SCROLL_ILLUSION_CONFIG',
-                                key: 'scrollbarOffset',
-                                value: Number(e.target.value),
-                              })
-                            }
-                          />
-                          <InputGroupAddon align="inline-end">px</InputGroupAddon>
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </SettingsAccordionContent>
-                </AccordionItem>
-
                 {/* Ripple Plugin */}
                 <AccordionItem value="ripple" className="relative">
                   <SettingsAccordionTrigger className="hover:no-underline">
@@ -1471,16 +1364,6 @@ export function ClientPage() {
               </Accordion>
             </CardContent>
           </Card>
-        </section>
-
-        {/* Scroll Illusion Demo Target */}
-        <section className="container mx-auto py-12 px-6">
-          <div
-            id="scroll-illusion-target"
-            className="flex items-center justify-center p-12 mt-48 mb-32 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30 text-muted-foreground/50 italic text-sm"
-          >
-            Scroll Illusion Target Element
-          </div>
         </section>
       </main>
     </div>

@@ -162,7 +162,7 @@ const initialSettings: SettingsState = {
   },
   trailConfig: {
     length: 40,
-    thickness: 20,
+    thickness: 7,
     color: '#0099ff',
     fadeDuration: 500,
   },

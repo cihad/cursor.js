@@ -170,29 +170,32 @@ describe('Cursor', () => {
       expect(clicked).toBe(3);
     });
 
-    it('.pause() stops the queue until .next() is called, .stop() is an alias', async () => {
+    it('.pause() immediately halts execution in realtime, .play() resumes, .next() jumps current delay', async () => {
       const actor = new Cursor({ humanize: false });
       let counter = 0;
 
       actor
-        .wait(10)
-        .pause()
         .do(() => counter++)
-        .wait(10)
-        .stop()
+        .wait(100)
+        .do(() => counter++)
+        .wait(100)
         .do(() => counter++);
 
-      // After a short delay, counter should still be 0 because it's paused
-      await new Promise((r) => setTimeout(r, 50));
-      expect(counter).toBe(0);
-
-      actor.next(); // Resume from pause
-      await new Promise((r) => setTimeout(r, 50));
+      // Let first step run
+      await new Promise((r) => setTimeout(r, 20));
       expect(counter).toBe(1);
 
-      actor.next(); // Resume from stop
-      await new Promise((r) => setTimeout(r, 50));
+      actor.pause(); // Realtime pause
+      await new Promise((r) => setTimeout(r, 150));
+      expect(counter).toBe(1); // Still 1
+
+      actor.play(); // Resume
+      await new Promise((r) => setTimeout(r, 120));
       expect(counter).toBe(2);
+
+      actor.next(); // Skip second wait
+      await new Promise((r) => setTimeout(r, 20));
+      expect(counter).toBe(3);
     });
 
     it('.waitForEvent() pauses the queue until the specified event is dispatched', async () => {
@@ -236,18 +239,33 @@ describe('Cursor', () => {
 
       expect(actor.state).toEqual({ speed: 0.5, humanize: false, size: 1 });
 
-      await actor
-        .wait(10)
-        .setState({ cursorType: 'pointer', color: 'red' })
-        .wait(10);
+      await actor.wait(10).setState({ cursorType: 'pointer', color: 'red' }).wait(10);
 
-      expect(actor.state).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red', size: 1 });
+      expect(actor.state).toEqual({
+        speed: 0.5,
+        humanize: false,
+        cursorType: 'pointer',
+        color: 'red',
+        size: 1,
+      });
       expect(pluginCalled).toBe(true);
       expect(hookOldState).toEqual({ speed: 0.5, humanize: false, size: 1 });
-      expect(hookNewState).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red', size: 1 });
+      expect(hookNewState).toEqual({
+        speed: 0.5,
+        humanize: false,
+        cursorType: 'pointer',
+        color: 'red',
+        size: 1,
+      });
 
       await actor.setState({ size: 2 });
-      expect(actor.state).toEqual({ speed: 0.5, humanize: false, cursorType: 'pointer', color: 'red', size: 2 });
+      expect(actor.state).toEqual({
+        speed: 0.5,
+        humanize: false,
+        cursorType: 'pointer',
+        color: 'red',
+        size: 2,
+      });
       // The cursor itself supports scaling directly through state
       expect((actor as any).cursor.el.style.transform).toContain('scale(2)');
     });

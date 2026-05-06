@@ -75,6 +75,28 @@ export class SoundPlugin implements CursorPlugin {
     }
   }
 
+  onPause() {
+    if (this.clickAudio && !this.clickAudio.paused) {
+      this.clickAudio.pause();
+    }
+    if (this.typingAudio && !this.typingAudio.paused) {
+      this.typingAudio.pause();
+    }
+    if (this.audioContext && this.audioContext.state === 'running') {
+      this.audioContext.suspend().catch(() => {});
+    }
+  }
+
+  onResume() {
+    // We optionally resume typing sound if it was paused. The click sound is usually too short.
+    if (this.typingAudio && this.typingAudio.currentTime > 0) {
+      this.typingAudio.play().catch(() => {});
+    }
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume().catch(() => {});
+    }
+  }
+
   private playSynthesizer(startFreq: number, endFreq: number, duration: number) {
     if (!this.audioContext || !this.options.useSynthesizerFallback) return;
 

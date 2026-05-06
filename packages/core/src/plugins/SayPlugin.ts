@@ -140,12 +140,14 @@ export class SayPlugin implements CursorPlugin {
     // Calculate duration based on text length if not provided
     const duration = options?.duration || Math.max(1000, text.length * 50);
 
-    await new Promise((resolve) => setTimeout(resolve, duration));
+    // Instead of resolving when timer is done, promise must be returned to chaining correctly
+    await (cursor as any).delay(duration);
 
-    // Fade out
     if (this.bubbleElement) {
       this.bubbleElement.style.opacity = '0';
-      await new Promise((resolve) => setTimeout(resolve, 200)); // wait for fade out
+      await (cursor as any).delay(200); // wait for fade out
+      this.bubbleElement.remove();
+      this.bubbleElement = null;
     }
 
     // Clear interval if in cursor mode
@@ -156,10 +158,5 @@ export class SayPlugin implements CursorPlugin {
 
     // Trigger onAfterSay hook
     this.onAfterSay?.(text);
-
-    if (this.bubbleElement && this.bubbleElement.parentNode) {
-      this.bubbleElement.parentNode.removeChild(this.bubbleElement);
-    }
-    this.bubbleElement = null;
   }
 }

@@ -11,5 +11,7 @@ export interface CursorPlugin {
   onTypeStart?: (text: string) => void;
   onTypeEnd?: () => void;
   onStateChange?: (newState: Record<string, any>, oldState: Record<string, any>) => void;
+  onPause?: () => void;
+  onResume?: () => void;
   onDestroy?: () => void;
 }

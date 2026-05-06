@@ -3,6 +3,9 @@ import { EventDispatcher } from './EventDispatcher';
 import { generateHumanPath } from './utils';
 import type { CursorPlugin } from '../plugins/CursorPlugin';
 
+export type CursorEvent = 'pause' | 'play' | 'destroy' | string;
+export type EventCallback = (...args: any[]) => void;
+
 export interface CursorOptions {
   speed?: number; // 0 to 1
   humanize?: boolean; // Default true
@@ -15,9 +18,10 @@ export class Cursor {
   private options: CursorOptions;
   private promise: Promise<void> = Promise.resolve();
   private plugins: CursorPlugin[] = [];
-  private isPaused = false;
-  private nextResolver: (() => void) | null = null;
+  public isGlobalPaused = false;
+  private activeDelayResolver: (() => void) | null = null;
   private currentHoveredElement: Element | null = null;
+  private listeners: Record<string, EventCallback[]> = {};
 
   constructor(options: CursorOptions = {}) {
     this.options = {
@@ -69,6 +73,51 @@ export class Cursor {
     return this.promise.then(onfulfilled, onrejected);
   }
 
+  private async delay(ms: number) {
+    if (ms <= 0) {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 0); // JSDOM might hang on requestAnimationFrame
+      });
+      return;
+    }
+    return new Promise<void>((resolve) => {
+      let start = performance.now();
+      let elapsed = 0;
+
+      this.activeDelayResolver = resolve;
+
+      const loop = () => {
+        if (!this.activeDelayResolver) return; // Means skipped/aborted
+
+        const current = performance.now();
+        const delta = current - start;
+        start = current;
+
+        if (!this.isGlobalPaused) {
+          elapsed += delta;
+        }
+
+        if (elapsed >= ms) {
+          this.activeDelayResolver = null;
+          resolve();
+        } else {
+          // Use setTimeout as a fallback in non-browser environments like tests
+          if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+            window.requestAnimationFrame(loop);
+          } else {
+            setTimeout(loop, 16);
+          }
+        }
+      };
+
+      if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+        window.requestAnimationFrame(loop);
+      } else {
+        setTimeout(loop, 16);
+      }
+    });
+  }
+
   // 1. Hover command
   hover(selector: string | Element): this {
     return this.enqueue(async () => {
@@ -100,7 +149,7 @@ export class Cursor {
       rect.right > window.innerWidth
     ) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      await new Promise((r) => setTimeout(r, 500));
+      await this.delay(500);
       const newRect = element.getBoundingClientRect();
       await this.moveGhostCursorTo(
         newRect.left + window.scrollX + newRect.width / 2,
@@ -136,6 +185,11 @@ export class Cursor {
 
     await this._hover(element);
     this.plugins.forEach((p) => p.onClickStart?.(element));
+
+    // Give browser a tiny frame window to start rendering visual click
+    // effects (like ripple or particles) before synchronously taking focus
+    await this.delay(300);
+
     EventDispatcher.click(element as HTMLElement);
   }
 
@@ -152,9 +206,12 @@ export class Cursor {
       // Typing simulation
       if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
         const delay = options?.delay || 100;
+        await this.delay(delay * 2 + Math.random() * delay); // Initial hesitation before starting to type
+        let currentText = element.value; // Cache value to avoid React state sync issues during pauses
         for (let i = 0; i < text.length; i++) {
-          EventDispatcher.triggerInputEvent(element, element.value + text[i]);
-          await new Promise((r) => setTimeout(r, delay / 2 + Math.random() * delay)); // Human-like typing delay
+          currentText += text[i];
+          EventDispatcher.triggerInputEvent(element, currentText);
+          await this.delay(delay / 2 + Math.random() * delay); // Human-like typing delay
         }
       }
 
@@ -164,29 +221,38 @@ export class Cursor {
 
   // Utilities
   wait(ms: number): this {
-    return this.enqueue(() => new Promise((resolve) => setTimeout(resolve, ms)));
+    return this.enqueue(() => this.delay(ms));
   }
 
   // Flow Control Methods
   pause(): this {
-    return this.enqueue(() => {
-      this.isPaused = true;
-      return new Promise<void>((resolve) => {
-        this.nextResolver = resolve;
-      });
-    });
+    this.isGlobalPaused = true;
+    this.emit('pause');
+    this.plugins.forEach((p) => p.onPause?.());
+    return this;
+  }
+
+  play(): this {
+    this.isGlobalPaused = false;
+    this.emit('play');
+    this.plugins.forEach((p) => p.onResume?.());
+    return this;
   }
 
   stop(): this {
     return this.pause();
   }
 
-  next(): void {
-    if (this.isPaused && this.nextResolver) {
-      this.isPaused = false;
-      this.nextResolver();
-      this.nextResolver = null;
+  next(): this {
+    // Skip current delay/action if any
+    if (this.activeDelayResolver) {
+      const resolve = this.activeDelayResolver;
+      this.activeDelayResolver = null;
+      resolve(); // Advance immediately
     }
+    // Also resume playing
+    this.play();
+    return this;
   }
 
   waitForEvent(selector: string | Element, eventName: string): this {
@@ -276,7 +342,7 @@ export class Cursor {
             this.enqueue = originalEnqueue;
           }
 
-          await new Promise((r) => setTimeout(r, 0));
+          await this.delay(0);
           await checkAndRun();
         }
       };
@@ -326,7 +392,7 @@ export class Cursor {
       for (const point of points) {
         this.cursor.moveTo(point.x, point.y);
         this.plugins.forEach((p) => p.onMove?.(point.x, point.y));
-        await new Promise((r) => setTimeout(r, 16 / speedMultiplier)); // Speed-adjusted delay internally
+        await this.delay(16 / speedMultiplier); // Speed-adjusted delay internally
       }
     } else {
       this.cursor.moveTo(targetX, targetY);
@@ -335,8 +401,28 @@ export class Cursor {
   }
 
   destroy() {
+    this.emit('destroy');
     this.plugins.forEach((p) => p.onDestroy?.());
     this.cursor.destroy();
+  }
+
+  // Events
+  on(event: CursorEvent, callback: EventCallback): this {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(callback);
+    return this;
+  }
+
+  off(event: CursorEvent, callback: EventCallback): this {
+    if (!this.listeners[event]) return this;
+    this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback);
+    return this;
+  }
+
+  private emit(event: CursorEvent, ...args: any[]) {
+    if (this.listeners[event]) {
+      this.listeners[event].forEach((cb) => cb(...args));
+    }
   }
 
   setState(newState: Record<string, any>): this {

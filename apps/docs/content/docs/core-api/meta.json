@@ -13,6 +13,7 @@
     "waitForEvent",
     "stop",
     "pause",
+    "play",
     "next",
     "setState",
     "use",

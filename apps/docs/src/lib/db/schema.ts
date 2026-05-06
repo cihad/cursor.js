@@ -8,6 +8,15 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
+// Landing Page Love it / Hate it tablosu
+export const feedbacks = pgTable('feedbacks', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  type: varchar('type', { length: 20 }).notNull(), // 'love', 'hate'
+  message: text('message').notNull(),
+  ipAddress: varchar('ip_address', { length: 45 }), // IPv4 / IPv6
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 // Satın alınan lisanslar tablosu (Lemon Squeezy entegrasyonu)
 export const licenses = pgTable('licenses', {
   id: varchar('id', { length: 255 }).primaryKey(), // Lemon Squeezy'den gelen sipariş ID'si

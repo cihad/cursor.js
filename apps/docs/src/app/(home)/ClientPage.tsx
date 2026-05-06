@@ -227,6 +227,28 @@ export function ClientPage() {
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  // Todo state
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'Learn Cursor.js', completed: false },
+    { id: 2, text: 'Star on GitHub', completed: false },
+  ]);
+  const [todoInput, setTodoInput] = useState('');
+
+  const addTodo = () => {
+    if (todoInput.trim()) {
+      setTodos([...todos, { id: Date.now(), text: todoInput.trim(), completed: false }]);
+      setTodoInput('');
+    }
+  };
+
+  const toggleTodo = (id: number) => {
+    setTodos(todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  };
+
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(t => t.id !== id));
+  };
+
   // Sandbox state
   const [htmlCode, setHtmlCode] = useState(`<!DOCTYPE html>
 <html>
@@ -355,11 +377,41 @@ c.move('#btn1')
         .wait(400)
         .click('#demo-accordion-2')
         .wait(1000)
+        .hover('.carousel-next')
+        .wait(400)
+        .click('.carousel-next')
+        .wait(1000)
+        // Todo app ops
+        .hover('#todo-input')
+        .type('#todo-input', 'Build an AI agent')
+        .wait(200)
+        .hover('#todo-add')
+        .click('#todo-add')
+        .wait(1000)
+        .hover('#todo-check-1')
+        .click('#todo-check-1')
+        .wait(1000)
+        .hover('.todo-item-2')
+        .wait(300)
+        .hover('#todo-delete-2')
+        .wait(300)
+        .click('#todo-delete-2')
+        .wait(1000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
         .do(() => {
           if (!isActive) return;
           setDemoState('done');
+          // Reset forms AND todos
+          setEmail('');
+          setPassword('');
+          setSubmitted(false);
+          setTodos([
+            { id: 1, text: 'Learn Cursor.js', completed: false },
+            { id: 2, text: 'Star on GitHub', completed: false },
+          ]);
+          setTodoInput('');
+          
           setTimeout(() => isActive && setDemoState('idle'), 3000);
         })
         .wait(3000)
@@ -1447,6 +1499,51 @@ c.move('#btn1')
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
+                  </div>
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="p-4 flex flex-col items-center">
+                    <h2 className="text-2xl font-bold mb-4">Step 3: Build a Todo App!</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Add, complete, and delete items from your list.
+                    </p>
+
+                    <div className="w-full max-w-sm border p-6 rounded-lg bg-background">
+                      <div className="flex gap-2 mb-4">
+                        <Input 
+                          id="todo-input" 
+                          placeholder="What needs to be done?" 
+                          value={todoInput}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTodoInput(e.target.value)}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addTodo()}
+                        />
+                        <Button id="todo-add" onClick={addTodo}>Add</Button>
+                      </div>
+                      
+                      <ul className="space-y-2">
+                        {todos.map((todo) => (
+                          <li key={todo.id} className={`todo-item-${todo.id} p-3 border rounded-md flex justify-between items-center group ${todo.completed ? 'opacity-50 line-through' : ''}`}>
+                            <span className="flex items-center gap-3">
+                              <input 
+                                type="checkbox" 
+                                id={`todo-check-${todo.id}`} 
+                                className="h-4 w-4" 
+                                checked={todo.completed}
+                                onChange={() => toggleTodo(todo.id)}
+                              />
+                              <span id={`todo-text-${todo.id}`}>{todo.text}</span>
+                            </span>
+                            <button 
+                              id={`todo-delete-${todo.id}`} 
+                              onClick={() => deleteTodo(todo.id)}
+                              className="text-red-500 opacity-50 hover:opacity-100 transition-opacity"
+                            >
+                              Delete
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </CarouselItem>
               </CarouselContent>

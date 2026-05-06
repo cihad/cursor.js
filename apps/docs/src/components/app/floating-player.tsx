@@ -25,7 +25,7 @@ export function FloatingPlayer({
     <div
       className={cn(
         'z-[50] flex items-center gap-2 p-2 bg-background/80 backdrop-blur-lg border rounded-full shadow-lg transition-all duration-500 ease-in-out',
-        isFixed ? 'fixed bottom-6 left-1/2 -translate-x-1/2' : 'relative'
+        isFixed ? 'fixed bottom-6 left-1/2 -translate-x-1/2' : 'relative',
       )}
     >
       <div className="flex items-center gap-2 px-2">

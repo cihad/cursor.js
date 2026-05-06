@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Info, Gem } from 'lucide-react';
+import { Info, Gem, Play, Pause, RotateCcw } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -214,7 +214,7 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
 const BEGINNING_CURSOR_SIZE = 3;
 
 export function ClientPage() {
-  const [demoState, setDemoState] = useState<'idle' | 'running' | 'done'>('idle');
+  const [demoState, setDemoState] = useState<'idle' | 'running' | 'paused' | 'done'>('idle');
   const actorRef = useRef<Cursor | null>(null);
 
   // Form states
@@ -233,11 +233,20 @@ export function ClientPage() {
     actorRef.current = c;
     let isActive = true;
 
+    // Listen to native kütüphane events for UI state sync
+    c.on('pause', () => {
+      if (!isActive) return;
+      setDemoState((prev) => (prev === 'idle' || prev === 'done' ? prev : 'paused'));
+    });
+    c.on('play', () => {
+      if (!isActive) return;
+      setDemoState('running');
+    });
+
     // Wrap the repeatable scenario in a function and link recursively
     const buildDemoSequence = () => {
       if (!isActive) return;
-      c.stop()
-        .do(() => setDemoState('running'))
+      c.do(() => c.pause()) // Sequence natural pause point
         .wait(500)
         .setState({ size: settings.coreConfig.size })
         .until(
@@ -254,10 +263,8 @@ export function ClientPage() {
             ctx
               .hover('#demo-email')
               .say('Let me fill this out for you!', { duration: 2000, position: 'subtitle' })
-              .wait(300)
               .do(() => isActive && setEmail(''))
-              .type('#demo-email', 'hello@cursor.js', { delay: 60 })
-              .wait(500),
+              .type('#demo-email', 'hello@cursor.js'),
         )
         .if(
           () => document.querySelector<HTMLInputElement>('#demo-password')?.value !== 'secret',
@@ -485,10 +492,36 @@ export function ClientPage() {
 
   const runDemo = () => {
     if (!actorRef.current || demoState === 'running') return;
+
+    if (demoState === 'paused') {
+      actorRef.current.play(); // Native event will trigger setDemoState('running')
+    } else {
+      setSubmitted(false);
+      setEmail('');
+      setPassword('');
+      actorRef.current.play(); // Resume from natural pause point
+    }
+  };
+
+  const pauseDemo = () => {
+    if (!actorRef.current || demoState !== 'running') return;
+    actorRef.current.pause(); // Native event will trigger setDemoState('paused')
+  };
+
+  const restartDemo = () => {
+    if (!actorRef.current) return;
+
+    // Stop actor
+    actorRef.current.pause();
+    actorRef.current.destroy();
+
+    setDemoState('idle');
     setSubmitted(false);
     setEmail('');
     setPassword('');
-    actorRef.current.next();
+    setTimeout(() => {
+      window.location.reload(); // Hard reload for simplicity since component state resets are complex
+    }, 100);
   };
 
   return (
@@ -501,16 +534,44 @@ export function ClientPage() {
           <div className="flex flex-col items-center space-y-8">
             <div className="relative w-20 h-26">
               <div id="cursor-beginning" className="absolute left-0 top-0 size-px" />
-              <Comet angle={55} isVisible={demoState !== 'running'} />
+              <Comet angle={55} isVisible={demoState === 'idle' || demoState === 'done'} />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
               cursor.js
             </h1>
           </div>
           <div className="flex space-x-4">
-            <Button size="lg" onClick={runDemo} disabled={demoState === 'running'}>
-              {demoState === 'running' ? 'Demo is running...' : 'Run Live Demo'}
-            </Button>
+            {demoState !== 'running' && demoState !== 'paused' ? (
+              <Button size="lg" onClick={runDemo} className="w-40">
+                <Play className="w-5 h-5 mr-2" />
+                Run Live Demo
+              </Button>
+            ) : (
+              <>
+                {demoState === 'running' ? (
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-11 w-11 rounded-full"
+                    onClick={pauseDemo}
+                  >
+                    <Pause className="w-5 h-5" />
+                  </Button>
+                ) : (
+                  <Button size="icon" className="h-11 w-11 rounded-full" onClick={runDemo}>
+                    <Play className="w-5 h-5" />
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="h-11 w-11 rounded-full"
+                  onClick={restartDemo}
+                >
+                  <RotateCcw className="w-5 h-5" />
+                </Button>
+              </>
+            )}
           </div>
         </section>
 

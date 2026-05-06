@@ -1,18 +1,18 @@
 ---
 title: next()
-description: Resumes a paused action sequence.
+description: Skips the currently active delay or wait and jumps to the next step.
 ---
 
 ## `next()`
 
-Resumes the sequence explicitly if it was previously halted by `pause()` or `stop()`.
+Synchronously forces the current `wait()`, `move()`, networking delay, or artificial typing delay to resolve instantly, accelerating the cursor to the next item in the event queue immediately.
 
-Unlike most `Cursor` APIs natively used during chaining, `next()` is synchronously fired to awaken the engine logic instead of being pushed sequentially to the queue. As such, it cannot be chained in the builder syntax and returns `void`.
+If the cursor is currently paused via `pause()`, calling `next()` will also automatically resume playback (calling `play()`).
 
 ### Use Cases
 
-- **Step-by-step tutorials:** Waiting for the user to read an explanation text and pressing "Got it!" before continuing the cursor animation.
-- **Interactive demonstrations:** Pausing mid-flow so the presenter can answer an audience question, then running `.next()` when ready.
+- **Skip Buttons:** Giving users the ability to skip long artificial typing delays or long sequences they've already seen.
+- **Manual Advancement:** Using `cursor.wait(99999)` internally to wait for an explicit user click (e.g. "Next Step"), and using `cursor.next()` to break out of the infinite wait immediately.
 
 ### Example
 
@@ -20,12 +20,11 @@ Unlike most `Cursor` APIs natively used during chaining, `next()` is synchronous
 const cursor = new Cursor();
 
 cursor
-  .hover('.step-1') // Executes freely
-  .pause()          // Execution halts
-  .hover('.step-2');
+  .move(100, 100)
+  .wait(86400000) // Infinite manual wait
+  .move(200, 200);
 
-// Sometime later from an external event or user interaction...
-document.querySelector('#continue-btn').addEventListener('click', () => {
-  cursor.next(); // Awakens the queue to continue to .step-2
+document.querySelector('.skip-btn').addEventListener('click', () => {
+  cursor.next(); // Resolves the infinite wait immediately and proceeds to (200, 200)
 });
 ```

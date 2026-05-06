@@ -18,16 +18,16 @@ describe('SayPlugin', () => {
   it('should create a speech bubble when say is called', async () => {
     cursor.use(new SayPlugin());
 
-    const promise = (cursor as any).say('Hello world');
+    (cursor as any).say('Hello world', { duration: 50 }); // Reduce duration for test
 
     // Wait a bit for DOM update
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     const bubble = document.querySelector('.cursor-js-speech-bubble');
     expect(bubble).not.toBeNull();
     expect(bubble?.textContent).toBe('Hello world');
 
-    // Fast forward to end of speech
-    await promise;
+    // Wait for the cursor queue to finish and the bubble to fade out
+    await new Promise((resolve) => setTimeout(resolve, 300));
   });
 });

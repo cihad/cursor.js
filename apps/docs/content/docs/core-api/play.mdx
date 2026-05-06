@@ -1,0 +1,23 @@
+---
+title: play()
+description: Resumes a globally paused cursor action sequence in real-time.
+---
+
+## `play()`
+
+Awakens the cursor runtime loop and plugins if they were previously halted by `pause()` or `stop()`.
+
+### Use Cases
+
+- **Playback Controls:** Letting the user resume tutorials and simulations at their own viewing pace.
+- **Background Restorations:** Starting animations back up gracefully after a foreground focus block is resolved.
+
+### Example
+
+```ts
+const cursor = new Cursor();
+
+document.querySelector('.play-btn').addEventListener('click', () => {
+  cursor.play(); // Continues the real-time simulation
+});
+```

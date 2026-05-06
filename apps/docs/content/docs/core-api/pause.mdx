@@ -1,30 +1,33 @@
 ---
 title: pause()
-description: Halts the cursor action queue until explicitly resumed.
+description: Instantly freezes the active cursor animation and queue in real-time.
 ---
 
 ## `pause()`
 
-Pauses the continuous execution of the action sequence immediately. The cursor will hold its current position and internal state. The sequence remains paused indefinitely until you call `next()`.
+Instantly freezes the global timing loop of the `Cursor` instance. Any active animation (like moving, typing delays, or waiting) will be suspended precisely at the current millisecond.
 
-*`stop()` acts as an alias to `pause()`.*
+The sequence and plugins remain paused indefinitely until you call `play()`.
+
+_`stop()` acts as an alias to `pause()`._
 
 ### Use Cases
 
-- **Step-by-step guidance:** Freezing the presentation cursor while explicitly showing an important warning dialog to the user until they dismiss it.
-- **Asynchronous processing:** Calling `pause()` manually before performing a large file upload on behalf of the user, freezing pointer interaction deliberately.
+- **Real-time playback controls:** Creating UI buttons that let the user play, pause, or restart a sequence on demand.
+- **Interrupting scenarios:** Stopping typing or movement immediately when a user navigates away or opens a modal over the demonstration.
 
 ### Example
 
 ```ts
 const cursor = new Cursor();
 
-cursor
-  .move(100, 100)
-  .pause() // Queue halts here
-  .move(200, 200);
+cursor.move(500, 500);
 
-document.querySelector('.resume-btn').addEventListener('click', () => {
-  cursor.next(); // Resumes the queue
+document.querySelector('.pause-btn').addEventListener('click', () => {
+  cursor.pause(); // Pauses the active movement immediately
+});
+
+document.querySelector('.play-btn').addEventListener('click', () => {
+  cursor.play(); // Resumes the movement exactly from where it left off
 });
 ```

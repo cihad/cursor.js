@@ -120,4 +120,20 @@ export class SpeechPlugin implements CursorPlugin {
   setLang(lang: string): void {
     this.options.lang = lang;
   }
+
+  onPause(): void {
+    if (
+      'speechSynthesis' in window &&
+      window.speechSynthesis.speaking &&
+      !window.speechSynthesis.paused
+    ) {
+      window.speechSynthesis.pause();
+    }
+  }
+
+  onResume(): void {
+    if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+  }
 }

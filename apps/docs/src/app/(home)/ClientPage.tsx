@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, useReducer, ReactNode } from 'react';
+import dynamic from 'next/dynamic';
+
+const CodeEditor = dynamic(() => import('@uiw/react-textarea-code-editor').then((mod) => mod.default), { ssr: false });
+
 import {
   Cursor,
   ThemePlugin,
@@ -222,6 +226,57 @@ export function ClientPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  // Sandbox state
+  const [htmlCode, setHtmlCode] = useState(`<!DOCTYPE html>
+<html>
+<body>
+  <div style="display: flex; gap: 10px; padding: 20px;">
+    <button id="btn1" style="padding: 8px 16px;">Button 1</button>
+    <button id="btn2" style="padding: 8px 16px;">Button 2</button>
+  </div>
+</body>
+</html>`);
+
+  const [jsCode, setJsCode] = useState(`import { Cursor } from 'https://unpkg.com/@cursor.js/core';
+
+// This is a basic example using unpkg!
+const c = new Cursor();
+c.move('#btn1')
+ .wait(500)
+ .click('#btn1')
+ .wait(500)
+ .move('#btn2')
+ .wait(500)
+ .click('#btn2');
+`);
+  const [activeTab, setActiveTab] = useState<'html' | 'js'>('html');
+  const [sandboxSrcDoc, setSandboxSrcDoc] = useState('');
+
+  const runSandbox = () => {
+    let bodyContent = htmlCode;
+    const bodyMatch = htmlCode.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch) {
+      bodyContent = bodyMatch[1];
+    }
+    const srcDocString = `<!DOCTYPE html>
+<html>
+<head>
+  <style>body { font-family: sans-serif; }</style>
+</head>
+<body>
+  ${bodyContent}
+  <script type="module">
+    ${jsCode}
+  </script>
+</body>
+</html>`;
+    setSandboxSrcDoc(srcDocString);
+  };
+
+  useEffect(() => {
+    runSandbox();
+  }, []);
 
   // Consolidated settings state via useReducer
   const [settings, dispatch] = useReducer(settingsReducer, initialSettings);
@@ -1398,6 +1453,90 @@ export function ClientPage() {
               <CarouselPrevious className="carousel-prev" />
               <CarouselNext className="carousel-next" />
             </Carousel>
+          </div>
+        </section>
+
+        {/* Sandbox Section */}
+        <section className="container mx-auto flex flex-col items-center justify-center space-y-6 pt-12 pb-24 md:pt-7 text-center px-6">
+          <div className="flex flex-col items-center space-y-4 px-4 w-full">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-2">
+              Try It In The Browser
+            </h2>
+            <p className="text-muted-foreground">Experiment right here using unpkg</p>
+          </div>
+          
+          <div className="flex flex-col lg:flex-row w-full max-w-6xl mt-8 rounded-xl overflow-hidden border bg-white shadow-sm h-[400px]">
+            {/* Left - Code Editor */}
+            <div className="w-full lg:w-1/2 border-r flex flex-col bg-slate-50">
+              <div className="flex items-center justify-between px-4 h-12 border-b bg-slate-100 border-slate-200 shrink-0">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setActiveTab('html')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${activeTab === 'html' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-900'}`}
+                  >
+                    index.html
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('js')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${activeTab === 'js' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-900'}`}
+                  >
+                    script.js
+                  </button>
+                </div>
+                <Button size="sm" variant="secondary" onClick={runSandbox} className="h-8 text-xs bg-slate-200 text-slate-900 hover:bg-slate-300 border shadow-none">
+                  <Play className="w-3 h-3 mr-1" /> Run
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto bg-white relative text-left" data-color-mode="light">
+                {activeTab === 'html' ? (
+                  <CodeEditor
+                    value={htmlCode}
+                    language="html"
+                    placeholder="Please enter HTML code."
+                    onChange={(evn) => setHtmlCode(evn.target.value)}
+                    padding={15}
+                    style={{
+                      fontSize: 14,
+                      backgroundColor: 'transparent',
+                      fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+                      minHeight: '100%',
+                      color: '#333'
+                    }}
+                    className="light-theme"
+                  />
+                ) : (
+                  <CodeEditor
+                    value={jsCode}
+                    language="js"
+                    placeholder="Please enter JS code."
+                    onChange={(evn) => setJsCode(evn.target.value)}
+                    padding={15}
+                    style={{
+                      fontSize: 14,
+                      backgroundColor: 'transparent',
+                      fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+                      minHeight: '100%',
+                      color: '#333'
+                    }}
+                    className="light-theme"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right - Preview */}
+            <div className="w-full lg:w-1/2 bg-white flex flex-col relative h-[400px] lg:h-auto">
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center bg-slate-100 border-b border-slate-200 text-xs font-mono text-slate-500 rounded-t-xl lg:rounded-tl-none lg:rounded-tr-xl pointer-events-none shrink-0">
+                  Preview
+                </div>
+                <div className="w-full h-full pt-12 text-black">
+                  <iframe 
+                    srcDoc={sandboxSrcDoc}
+                    className="w-full h-full border-none"
+                    title="sandbox"
+                  />
+                </div>
+            </div>
           </div>
         </section>
       </main>

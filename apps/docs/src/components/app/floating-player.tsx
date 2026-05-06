@@ -1,8 +1,10 @@
 import { Play, Pause, RotateCcw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ReactNode } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ReactNode, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useMediaQuery } from 'usehooks-ts';
 
 interface FloatingPlayerProps {
   demoState: 'idle' | 'running' | 'paused' | 'done';
@@ -21,6 +23,13 @@ export function FloatingPlayer({
   onRestart,
   settingsContent,
 }: FloatingPlayerProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div
       className={cn(
@@ -54,20 +63,40 @@ export function FloatingPlayer({
 
       <div className="w-px h-6 bg-border mx-1" />
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full mr-1">
-            <Settings className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          side="top"
-          align="end"
-          className="w-[380px] p-0 mb-4 rounded-xl shadow-xl z-[9999]"
-        >
-          {settingsContent}
-        </PopoverContent>
-      </Popover>
+      {!mounted ? (
+        <Button variant="ghost" size="icon" className="rounded-full mr-1">
+          <Settings className="w-4 h-4" />
+        </Button>
+      ) : isDesktop ? (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full mr-1">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            className="w-[380px] p-0 mb-4 rounded-xl shadow-xl z-[9999]"
+          >
+            {settingsContent}
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full mr-1">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="p-0 z-[99999] w-[350px] sm:w-[400px]">
+            <SheetHeader className="p-4 pb-0 text-left">
+              <SheetTitle>Cursor Settings</SheetTitle>
+            </SheetHeader>
+            {settingsContent}
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

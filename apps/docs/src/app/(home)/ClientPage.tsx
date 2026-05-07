@@ -1679,6 +1679,7 @@ c.move('#btn1')
                   srcDoc={sandboxSrcDoc}
                   className="w-full h-full border-none"
                   title="sandbox"
+                  sandbox="allow-scripts"
                 />
               </div>
             </div>

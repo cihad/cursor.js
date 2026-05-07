@@ -1,10 +1,4 @@
-export function bezierCurve(
-  t: number,
-  p0: number,
-  p1: number,
-  p2: number,
-  p3: number,
-): number {
+export function bezierCurve(t: number, p0: number, p1: number, p2: number, p3: number): number {
   const u = 1 - t;
   const tt = t * t;
   const uu = u * u;
@@ -19,26 +13,15 @@ export function bezierCurve(
   return p;
 }
 
-export function generateHumanPath(
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
-) {
-  const distance = Math.sqrt(
-    Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2),
-  );
+export function generateHumanPath(startX: number, startY: number, endX: number, endY: number) {
+  const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
 
   // Control points based on distance for curvature
-  const cp1X =
-    startX + (endX - startX) * 0.25 + (Math.random() - 0.5) * distance * 0.2;
-  const cp1Y =
-    startY + (endY - startY) * 0.25 + (Math.random() - 0.5) * distance * 0.2;
+  const cp1X = startX + (endX - startX) * 0.25 + (Math.random() - 0.5) * distance * 0.2;
+  const cp1Y = startY + (endY - startY) * 0.25 + (Math.random() - 0.5) * distance * 0.2;
 
-  const cp2X =
-    startX + (endX - startX) * 0.75 + (Math.random() - 0.5) * distance * 0.2;
-  const cp2Y =
-    startY + (endY - startY) * 0.75 + (Math.random() - 0.5) * distance * 0.2;
+  const cp2X = startX + (endX - startX) * 0.75 + (Math.random() - 0.5) * distance * 0.2;
+  const cp2Y = startY + (endY - startY) * 0.75 + (Math.random() - 0.5) * distance * 0.2;
 
   const points = [];
   // Number of steps based on distance
@@ -59,16 +42,10 @@ export function generateHumanPath(
 }
 
 // React 16+ native setter wrapper
-export function setNativeValue(
-  element: HTMLInputElement | HTMLTextAreaElement,
-  value: string,
-) {
-  const valueSetter = Object.getOwnPropertyDescriptor(element, "value")?.set;
+export function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
   const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(
-    prototype,
-    "value",
-  )?.set;
+  const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
 
   if (valueSetter && valueSetter !== prototypeValueSetter) {
     prototypeValueSetter?.call(element, value);

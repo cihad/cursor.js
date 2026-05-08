@@ -293,6 +293,12 @@ c.move('#btn1')
 </head>
 <body>
   ${bodyContent}
+  <script>
+    const originalFocus = HTMLElement.prototype.focus;
+    HTMLElement.prototype.focus = function(options) {
+      return originalFocus.call(this, { preventScroll: true, ...options });
+    };
+  </script>
   <script type="module">
     ${jsCode}
   </script>

@@ -1761,12 +1761,12 @@ c.move('#btn1')
                 Preview
               </div>
               <div className="w-full h-full pt-12 text-black">
-                {/* <iframe
+                <iframe
                   srcDoc={sandboxSrcDoc}
                   className="w-full h-full border-none"
                   title="sandbox"
                   sandbox="allow-scripts"
-                /> */}
+                />
               </div>
             </div>
           </div>

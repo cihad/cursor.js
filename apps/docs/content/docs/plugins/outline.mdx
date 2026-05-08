@@ -1,0 +1,55 @@
+---
+title: Outline Plugin
+description: Draw geometric shapes (circles and lines) around target elements to draw user attention.
+---
+
+The `OutlinePlugin` helps you focus the user's attention on a specific element by smoothly drawing a circle around it or underlining it with your cursor. This is excellent for tutorials, product tours, or highlighting forms.
+
+### Demo
+
+<iframe
+  src="/demos/outline"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+## Features
+
+- Draw geometric circles perfectly centered around HTML elements
+- Draw directional underlines beneath text elements
+- Customize rotation speeds, steps, and multiple animation loops
+
+## Installation
+
+The `OutlinePlugin` is included in the `@cursor.js/pro` package.
+
+```bash
+npm install @cursor.js/pro @cursor.js/core
+```
+
+## Basic Usage
+
+```typescript
+import { Cursor } from '@cursor.js/core';
+import { OutlinePlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(new OutlinePlugin());
+
+// Highlight a button with a circle
+cursor.move('#my-button');
+cursor.outlineCircle('#my-button', { duration: 1000 });
+
+// Or underline a paragraph
+cursor.move('#my-text');
+cursor.outlineUnderline('#my-text', { duration: 1500, loopCount: 2 });
+```
+
+## Configuration Options
+
+You can customize the outline behaviors directly during the action or at instantiation:
+
+<auto-type-table
+  path="../../../../../packages/pro/src/OutlinePlugin.ts"
+  name="OutlinePluginOptions"
+/>
+

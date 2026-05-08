@@ -60,7 +60,7 @@ export class EventDispatcher {
 
     if (document.activeElement !== element) {
       try {
-        element.focus();
+        element.focus({ preventScroll: true });
       } catch (e) {}
     }
   }

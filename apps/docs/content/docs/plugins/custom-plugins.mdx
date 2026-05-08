@@ -11,20 +11,10 @@ By implementing specific lifecycle methods from the `CursorPlugin` interface, yo
 
 ### The `CursorPlugin` Interface
 
-```ts
-export interface CursorPlugin {
-  name: string;
-  install: (cursor: Cursor) => void;
-  // Lifecycle hooks
-  onMoveStart?: (x: number, y: number) => void;
-  onMove?: (x: number, y: number) => void;
-  onClickStart?: (target: Element) => void;
-  onHoverStart?: (target: Element) => void;
-  onTypeStart?: (text: string) => void;
-  onStateChange?: (newState: Record<string, any>, oldState: Record<string, any>) => void;
-  onDestroy?: () => void;
-}
-```
+<auto-type-table
+  path="../../../../../packages/core/src/plugins/CursorPlugin.ts"
+  name="CursorPlugin"
+/>
 
 ### Example: Log Clicks Plugin
 

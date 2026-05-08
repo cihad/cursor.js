@@ -6,6 +6,8 @@ export interface SayOptions {
   requireClick?: boolean;
   position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
   speak?: boolean;
+  /** Wait for the bubble to disappear before continuing the sequence. Default: false */
+  waitUntilFinished?: boolean;
 }
 
 declare module '../core/Cursor' {
@@ -139,24 +141,34 @@ export class SayPlugin implements CursorPlugin {
 
     // Calculate duration based on text length if not provided
     const duration = options?.duration || Math.max(1000, text.length * 50);
+    // Default to false as requested
+    const waitUntilFinished = options?.waitUntilFinished ?? false;
 
-    // Instead of resolving when timer is done, promise must be returned to chaining correctly
-    await (cursor as any).delay(duration);
+    const finalizeBubble = async () => {
+      await (cursor as any).delay(duration);
 
-    if (this.bubbleElement) {
-      this.bubbleElement.style.opacity = '0';
-      await (cursor as any).delay(200); // wait for fade out
-      this.bubbleElement.remove();
-      this.bubbleElement = null;
+      if (this.bubbleElement) {
+        this.bubbleElement.style.opacity = '0';
+        await (cursor as any).delay(200); // wait for fade out
+        this.bubbleElement.remove();
+        this.bubbleElement = null;
+      }
+
+      // Clear interval if in cursor mode
+      if (position === 'cursor' && this.moveIntervalId) {
+        clearInterval(this.moveIntervalId);
+        this.moveIntervalId = null;
+      }
+
+      // Trigger onAfterSay hook
+      this.onAfterSay?.(text);
+    };
+
+    if (waitUntilFinished) {
+      await finalizeBubble();
+    } else {
+      // Fire and forget without holding the promise execution sequence
+      finalizeBubble().catch(() => {});
     }
-
-    // Clear interval if in cursor mode
-    if (position === 'cursor' && this.moveIntervalId) {
-      clearInterval(this.moveIntervalId);
-      this.moveIntervalId = null;
-    }
-
-    // Trigger onAfterSay hook
-    this.onAfterSay?.(text);
   }
 }

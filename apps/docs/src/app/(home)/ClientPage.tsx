@@ -703,10 +703,7 @@ c.move('#btn1')
                 onPause={pauseDemo}
                 onRestart={restartDemo}
                 settingsContent={
-                  <div className="overflow-y-auto flex flex-col px-4">
-                    <div className="font-semibold text-lg mb-4 hidden md:block">
-                      Cursor Settings
-                    </div>
+                  <div className="overflow-y-auto flex flex-col p-4">
                     <Accordion type="single" collapsible className="w-full">
                       {/* General / Common Settings */}
                       <AccordionItem value="general">

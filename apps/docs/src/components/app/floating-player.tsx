@@ -1,10 +1,8 @@
 import { Play, Pause, RotateCcw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ReactNode, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { useMediaQuery } from 'usehooks-ts';
 
 interface FloatingPlayerProps {
   demoState: 'idle' | 'running' | 'paused' | 'done';
@@ -23,7 +21,6 @@ export function FloatingPlayer({
   onRestart,
   settingsContent,
 }: FloatingPlayerProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -67,21 +64,6 @@ export function FloatingPlayer({
         <Button variant="ghost" size="icon" className="rounded-full mr-1">
           <Settings className="w-4 h-4" />
         </Button>
-      ) : isDesktop ? (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full mr-1">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            side="top"
-            align="end"
-            className="w-[380px] p-0 mb-4 rounded-xl shadow-xl z-[9999]"
-          >
-            {settingsContent}
-          </PopoverContent>
-        </Popover>
       ) : (
         <Sheet>
           <SheetTrigger asChild>

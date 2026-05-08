@@ -19,7 +19,7 @@ export class Cursor {
   private promise: Promise<void> = Promise.resolve();
   private plugins: CursorPlugin[] = [];
   public isGlobalPaused = false;
-  private activeDelayResolver: (() => void) | null = null;
+  private activeDelayResolvers = new Set<() => void>();
   private currentHoveredElement: Element | null = null;
   private listeners: Record<string, EventCallback[]> = {};
 
@@ -84,10 +84,10 @@ export class Cursor {
       let start = performance.now();
       let elapsed = 0;
 
-      this.activeDelayResolver = resolve;
+      this.activeDelayResolvers.add(resolve);
 
       const loop = () => {
-        if (!this.activeDelayResolver) return; // Means skipped/aborted
+        if (!this.activeDelayResolvers.has(resolve)) return; // Means skipped/aborted
 
         const current = performance.now();
         const delta = current - start;
@@ -98,7 +98,7 @@ export class Cursor {
         }
 
         if (elapsed >= ms) {
-          this.activeDelayResolver = null;
+          this.activeDelayResolvers.delete(resolve);
           resolve();
         } else {
           // Use setTimeout as a fallback in non-browser environments like tests
@@ -244,12 +244,12 @@ export class Cursor {
   }
 
   next(): this {
-    // Skip current delay/action if any
-    if (this.activeDelayResolver) {
-      const resolve = this.activeDelayResolver;
-      this.activeDelayResolver = null;
+    // Skip current delays/actions if any
+    for (const resolve of this.activeDelayResolvers) {
       resolve(); // Advance immediately
     }
+    this.activeDelayResolvers.clear();
+
     // Also resume playing
     this.play();
     return this;

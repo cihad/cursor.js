@@ -2,6 +2,15 @@ import type { Cursor } from '../core/Cursor';
 import type { CursorPlugin } from './CursorPlugin';
 import { SayPlugin as SayPluginClass } from './SayPlugin';
 
+declare module './SayPlugin' {
+  interface SayOptions {
+    speech?: {
+      waitUntilFinished?: boolean;
+      [key: string]: any;
+    };
+  }
+}
+
 export interface SpeechPluginOptions {
   enabled?: boolean;
   lang?: string;
@@ -10,6 +19,8 @@ export interface SpeechPluginOptions {
   volume?: number;
   /** Exact voice name to use (e.g., 'Google US English'). If not provided, best voice is auto-selected. */
   voiceName?: string;
+  /** Wait for the speech to finish before proceeding to the next step */
+  waitUntilFinished?: boolean;
 }
 
 export class SpeechPlugin implements CursorPlugin {
@@ -17,8 +28,10 @@ export class SpeechPlugin implements CursorPlugin {
   private options: Required<Omit<SpeechPluginOptions, 'enabled'>> & {
     enabled: boolean;
     voiceName: string;
+    waitUntilFinished: boolean;
   };
-  private originalOnBeforeSay: ((text: string, options?: any) => void) | null = null;
+  private originalOnBeforeSay: ((text: string, options?: any) => void | Promise<void>) | null =
+    null;
 
   constructor(options: SpeechPluginOptions = {}) {
     this.options = {
@@ -28,6 +41,7 @@ export class SpeechPlugin implements CursorPlugin {
       pitch: options.pitch ?? 1,
       volume: options.volume ?? 1,
       voiceName: options.voiceName ?? '',
+      waitUntilFinished: options.waitUntilFinished ?? false,
     };
   }
 
@@ -42,48 +56,58 @@ export class SpeechPlugin implements CursorPlugin {
     this.originalOnBeforeSay = sayPlugin.onBeforeSay || null;
 
     // Override with speech synthesis
-    sayPlugin.onBeforeSay = (text: string, options?: { speak?: boolean }) => {
+    sayPlugin.onBeforeSay = async (text: string, options?: any) => {
       // Call original if exists
-      this.originalOnBeforeSay?.(text, options);
+      if (this.originalOnBeforeSay) {
+        await this.originalOnBeforeSay(text, options);
+      }
 
       // Check if speech is enabled (global + per-call)
       const shouldSpeak = this.options.enabled && options?.speak !== false;
+      const waitUntilFinished =
+        options?.speech?.waitUntilFinished ?? this.options.waitUntilFinished;
 
       if (shouldSpeak) {
-        this.speak(text);
+        const playPromise = this.speak(text);
+        if (waitUntilFinished) {
+          await playPromise;
+        } else {
+          playPromise.catch((e) => console.error('[SpeechPlugin]', e));
+        }
       }
     };
   }
 
-  private speak(text: string): void {
-    if (!('speechSynthesis' in window)) {
-      console.warn('[SpeechPlugin] Web Speech API not supported in this browser.');
-      return;
-    }
+  private speak(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (!('speechSynthesis' in window)) {
+        console.warn('[SpeechPlugin] Web Speech API not supported in this browser.');
+        resolve();
+        return;
+      }
 
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
+      // Cancel any ongoing speech
+      speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    const lang = this.options.lang;
-    const trySpeak = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const lang = this.options.lang;
+
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+
+      const trySpeak = () => {
+        const voices = speechSynthesis.getVoices();
+        this.applyVoiceAndSpeak(utterance, lang, voices);
+      };
+
+      // Voices may not be loaded yet in some browsers
       const voices = speechSynthesis.getVoices();
-      this.applyVoiceAndSpeak(utterance, lang, voices);
-    };
-
-    // Voices may not be loaded yet in some browsers
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      trySpeak();
-    } else {
-      speechSynthesis.addEventListener(
-        'voiceschanged',
-        () => {
-          trySpeak();
-        },
-        { once: true },
-      );
-    }
+      if (voices.length > 0) {
+        trySpeak();
+      } else {
+        speechSynthesis.addEventListener('voiceschanged', () => trySpeak(), { once: true });
+      }
+    });
   }
 
   private applyVoiceAndSpeak(

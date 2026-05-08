@@ -335,19 +335,21 @@ c.move('#btn1')
         .wait(500)
         .setState({ size: settings.coreConfig.size });
 
+      const afterSay = sequence.say('Let me introduce you to Cursor.js, which is who I am.', {
+        duration: 3000,
+        position: 'subtitle',
+        waitUntilFinished: false,
+      });
+
       // Sadece outline aktifse çalıştır
       const afterOutline = settings.plugins.outline
-        ? ((sequence as any).outlineCircle('#hero-title', {
+        ? ((afterSay as any).outlineCircle('#hero-title', {
             duration: 1500,
             loopCount: 1,
           }) as Cursor)
-        : sequence;
+        : afterSay;
 
       afterOutline
-        .say('Let me introduce you to Cursor.js, which is who I am.', {
-          duration: 3000,
-          position: 'subtitle',
-        })
         .wait(1000)
         .until(
           () => {
@@ -1759,12 +1761,12 @@ c.move('#btn1')
                 Preview
               </div>
               <div className="w-full h-full pt-12 text-black">
-                <iframe
+                {/* <iframe
                   srcDoc={sandboxSrcDoc}
                   className="w-full h-full border-none"
                   title="sandbox"
                   sandbox="allow-scripts"
-                />
+                /> */}
               </div>
             </div>
           </div>

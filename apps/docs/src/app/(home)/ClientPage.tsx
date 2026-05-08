@@ -19,7 +19,7 @@ import {
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin, OutlinePlugin } from '@cursor.js/pro';
 
 import {
   Carousel,
@@ -82,6 +82,7 @@ type SettingsState = {
     say: boolean;
     speech: boolean;
     geminiTts: boolean;
+    outline: boolean;
   };
   rippleConfig: {
     color: string;
@@ -162,6 +163,7 @@ const initialSettings: SettingsState = {
     say: true,
     speech: false,
     geminiTts: true,
+    outline: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -327,9 +329,26 @@ c.move('#btn1')
     // Wrap the repeatable scenario in a function and link recursively
     const buildDemoSequence = () => {
       if (!isActive) return;
-      c.do(() => c.pause()) // Sequence natural pause point
+
+      const sequence = c
+        .do(() => c.pause()) // Sequence natural pause point
         .wait(500)
-        .setState({ size: settings.coreConfig.size })
+        .setState({ size: settings.coreConfig.size });
+
+      // Sadece outline aktifse çalıştır
+      const afterOutline = settings.plugins.outline
+        ? ((sequence as any).outlineCircle('#hero-title', {
+            duration: 1500,
+            loopCount: 1,
+          }) as Cursor)
+        : sequence;
+
+      afterOutline
+        .say('Let me introduce you to Cursor.js, which is who I am.', {
+          duration: 3000,
+          position: 'subtitle',
+        })
+        .wait(1000)
         .until(
           () => {
             const prevBtn = document.querySelector('.carousel-prev');
@@ -395,7 +414,15 @@ c.move('#btn1')
         .click('#todo-check-1')
         .wait(1000)
         .hover('.todo-item-2')
-        .wait(300)
+        .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
+        .wait(1000)
+        .if(
+          () => !!settings.plugins.outline,
+          (ctx) =>
+            (ctx as any)
+              .outlineUnderline('.todo-item-2', { duration: 1000, loopCount: 2 })
+              .wait(300),
+        )
         .hover('#todo-delete-2')
         .wait(300)
         .click('#todo-delete-2')
@@ -599,6 +626,13 @@ c.move('#btn1')
     } else {
       c.removePlugin('gemini-tts');
     }
+
+    if (plugins.outline) {
+      c.removePlugin('outline');
+      c.use(new OutlinePlugin());
+    } else {
+      c.removePlugin('outline');
+    }
   }, [settings]);
 
   const runDemo = () => {
@@ -647,7 +681,10 @@ c.move('#btn1')
               <div id="cursor-beginning" className="absolute left-0 top-0 size-px" />
               <Comet angle={55} isVisible={demoState === 'idle' || demoState === 'done'} />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mb-4">
+            <h1
+              id="hero-title"
+              className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mb-4"
+            >
               cursor.js
             </h1>
             <div className="h-14 mt-4 w-full flex justify-center">
@@ -877,6 +914,53 @@ c.move('#btn1')
                                 disabled
                               />
                             </div>
+                          </div>
+                        </SettingsAccordionContent>
+                      </AccordionItem>
+
+                      {/* Outline Plugin */}
+                      <AccordionItem value="outline" className="relative">
+                        <SettingsAccordionTrigger className="w-full pr-12 hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Outline
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] p-4 text-sm"
+                              >
+                                <p>
+                                  Generates smooth orbiting animations around target elements,
+                                  making your demos more engaging.
+                                </p>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-outline"
+                            checked={settings.plugins.outline}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'outline',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Used programmatically via{' '}
+                              <code>.outlineCircle(selector, options)</code>.
+                            </p>
                           </div>
                         </SettingsAccordionContent>
                       </AccordionItem>

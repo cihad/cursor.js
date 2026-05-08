@@ -9,7 +9,7 @@ import {
   SoundPlugin,
   LoggingPlugin,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin } from '@cursor.js/pro';
+import { TrailPlugin, ParticlePlugin, OutlinePlugin } from '@cursor.js/pro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -580,6 +580,51 @@ export function GeminiTTSDemo() {
       ) : (
         <Button id="gemini-tts-btn">Gemini TTS Action</Button>
       )}
+    </div>
+  );
+}
+
+export function OutlineDemo() {
+  useEffect(() => {
+    let isActive = true;
+    const c = new Cursor({ speed: 0.8 });
+    c.use(new OutlinePlugin());
+
+    const loop = async () => {
+      if (!isActive) return;
+      c.move('#btn1')
+        .wait(300);
+      
+      // Outline circle
+      (c as any).outlineCircle('#btn1', { duration: 1000 })
+        .wait(500)
+        .move('#btn2')
+        .wait(300);
+      
+      // Outline underline
+      (c as any).outlineUnderline('#btn2', { duration: 1000, loopCount: 2 })
+        .wait(500)
+        .move(10, 10)
+        .wait(500)
+        .do(loop);
+    };
+
+    loop();
+
+    return () => {
+      isActive = false;
+      c.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-12 w-full h-full pt-12">
+      <button id="btn1" className="px-8 py-3 bg-indigo-500 text-white rounded-lg">
+        Circle Target
+      </button>
+      <div id="btn2" className="text-xl font-bold text-slate-700 select-none">
+        Underline Target
+      </div>
     </div>
   );
 }

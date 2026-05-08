@@ -50,3 +50,9 @@ export const ScrollIllusionPlugin = class {
 };
 
 export default mockProxy;
+
+export const OutlinePlugin = class {
+  name = 'outline-mock';
+  constructor(args?: any) {}
+  install() {}
+};

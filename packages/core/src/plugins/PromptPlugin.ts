@@ -149,7 +149,7 @@ export class PromptPlugin implements CursorPlugin {
       const btnContainer = document.createElement('div');
       btnContainer.style.display = 'flex';
       btnContainer.style.gap = '8px';
-      btnContainer.style.justifyContent = 'center';
+      btnContainer.style.justifyContent = 'flex-end';
 
       const buttons = options?.buttons || [{ label: 'OK', onClick: 'continue', type: 'primary' }];
 

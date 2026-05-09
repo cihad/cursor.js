@@ -30,8 +30,6 @@ export class SpeechPlugin implements CursorPlugin {
     voiceName: string;
     waitUntilFinished: boolean;
   };
-  private originalOnBeforeSay: ((text: string, options?: any) => void | Promise<void>) | null =
-    null;
 
   constructor(options: SpeechPluginOptions = {}) {
     this.options = {
@@ -46,26 +44,13 @@ export class SpeechPlugin implements CursorPlugin {
   }
 
   install(cursor: Cursor) {
-    const sayPlugin = (cursor as any).plugins?.find((p: any) => p.name === 'say');
-    if (!(sayPlugin instanceof SayPluginClass)) {
-      console.warn('[SpeechPlugin] SayPlugin not found. Please install SayPlugin first.');
-      return;
-    }
+    // Note: SayPlugin's onBeforeSay override is kept for backward compatibility,
+    // but SpeechPlugin now also listens to 'speech_requested' via event emitter.
 
-    // Store original callback
-    this.originalOnBeforeSay = sayPlugin.onBeforeSay || null;
-
-    // Override with speech synthesis
-    sayPlugin.onBeforeSay = async (text: string, options?: any) => {
-      // Call original if exists
-      if (this.originalOnBeforeSay) {
-        await this.originalOnBeforeSay(text, options);
-      }
-
-      // Check if speech is enabled (global + per-call)
+    cursor.on('speech_requested', async (text: string, options?: any) => {
       const shouldSpeak = this.options.enabled && options?.speak !== false;
       const waitUntilFinished =
-        options?.speech?.waitUntilFinished ?? this.options.waitUntilFinished;
+        options?.speech?.waitUntilFinished ?? options?.waitUntilFinished ?? this.options.waitUntilFinished;
 
       if (shouldSpeak) {
         const playPromise = this.speak(text);
@@ -75,7 +60,19 @@ export class SpeechPlugin implements CursorPlugin {
           playPromise.catch((e) => console.error('[SpeechPlugin]', e));
         }
       }
-    };
+    });
+
+    const sayPlugin = (cursor as any).plugins?.find((p: any) => p.name === 'say');
+    if (!(sayPlugin instanceof SayPluginClass)) {
+      console.warn('[SpeechPlugin] SayPlugin not found, but Event Emitter will still process speech_requested events.');
+      return;
+    }
+
+    // Keep old override method so that if folks call say without event emitter, it might still work.
+    // However, event emitter is primary. To avoid double-speaking, we only bind to event emitter.
+    // Actually, sayPlugin now emits `speech_requested`. So we DO NOT need to override `onBeforeSay`.
+    // We will just leave it. Or remove the override.
+    // Let's remove the SayPlugin override to prevent double-speaking.
   }
 
   private speak(text: string): Promise<void> {

@@ -123,8 +123,11 @@ export class SayPlugin implements CursorPlugin {
       if (this.bubbleElement) this.bubbleElement.style.opacity = '1';
     });
 
-    // Trigger onBeforeSay hook (for SpeechPlugin etc.)
+    // Trigger onBeforeSay hook (for backward compatibility if needed)
     await this.onBeforeSay?.(text, options);
+
+    // Trigger speech event via emitAsync
+    await cursor.emitAsync('speech_requested', text, options);
 
     // Track ghost cursor position if in cursor mode
     if (position === 'cursor') {

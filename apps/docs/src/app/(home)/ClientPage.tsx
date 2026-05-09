@@ -1488,14 +1488,35 @@ c.move('#btn1')
                       {/* Prompt Plugin */}
                       <AccordionItem value="prompt" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Prompt UI (Interactive)</div>
+                          <div className="flex items-center gap-1.5">
+                            Prompt
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/prompt"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch
                             id="enable-prompt"
                             checked={settings.plugins.prompt}
                             onCheckedChange={(checked) =>
-                              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'prompt', enabled: checked })
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'prompt',
+                                enabled: checked,
+                              })
                             }
                           />
                         </div>
@@ -1504,7 +1525,24 @@ c.move('#btn1')
                       {/* Say Plugin */}
                       <AccordionItem value="say" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Say (Speech Bubble)</div>
+                          <div className="flex items-center gap-1.5">
+                            Say
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/say"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch
@@ -1520,7 +1558,24 @@ c.move('#btn1')
                       {/* Speech Plugin */}
                       <AccordionItem value="speech" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Speech (Web Speech API)</div>
+                          <div className="flex items-center gap-1.5">
+                            Speech
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/speech"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch

@@ -33,7 +33,7 @@ export class PromptPlugin implements CursorPlugin {
 
   constructor(options: PromptPluginOptions = {}) {
     this.options = {
-      defaultPosition: 'center',
+      defaultPosition: 'cursor',
       ...options,
     };
   }
@@ -44,16 +44,20 @@ export class PromptPlugin implements CursorPlugin {
     // @ts-ignore
     cursor.constructor.prototype.prompt = function (message: string, options?: PromptOptions) {
       return this.addStep(async () => {
-        // Asenkron ses isteğini yolla ve bitmesini bekle
         const waitSpeech = options?.waitUntilFinished ?? true;
-        await cursor.emitAsync('speech_requested', message, { waitUntilFinished: waitSpeech });
+        
+        // İkisi eşzamanlı çalışsın: Hem konuşma başlasın hem prompt menüsü açılsın
+        const speechPromise = cursor.emitAsync('speech_requested', message, { waitUntilFinished: waitSpeech });
 
         // Ekrana elementi çiz ve resolve'u bekle
-        await new Promise<any>((resolve) => {
+        const promptPromise = new Promise<any>((resolve) => {
           self.showPrompt(this, message, options, resolve);
         }).then((val) => {
           if (options?.onComplete) options.onComplete(val);
         });
+
+        // İkisinden birini sıraya koymak yerine ikisini de aynı anda bekliyoruz
+        await Promise.all([speechPromise, promptPromise]);
       });
     };
   }

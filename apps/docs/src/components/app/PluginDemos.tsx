@@ -643,7 +643,17 @@ export function PromptDemo() {
 
       async function runLoop() {
         if (!isActive) return;
-        await cursor.hover('#prompt-demo-btn').prompt('Do you really want to click this button?').click('#prompt-demo-btn').wait(1000);
+        await cursor
+          .hover('#prompt-btn-1')
+          .prompt('Displaying near cursor...', { position: 'cursor' })
+          .wait(500)
+          .hover('#prompt-btn-2')
+          .prompt('Displaying at the bottom...', { position: 'bottom' })
+          .wait(500)
+          .hover('#prompt-btn-3')
+          .prompt('Displaying in the center modal style...', { position: 'center' })
+          .wait(1000);
+          
         if (!isActive) return;
         runLoop();
       }
@@ -658,9 +668,15 @@ export function PromptDemo() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      <button id="prompt-demo-btn" className="px-6 py-2 bg-rose-500 text-white rounded shadow-sm">
-        Delete Action
+    <div className="flex flex-col gap-4 items-center justify-center w-full h-full p-4">
+      <button id="prompt-btn-1" className="px-6 py-2 bg-blue-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+        Cursor Pos
+      </button>
+      <button id="prompt-btn-2" className="px-6 py-2 bg-green-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+        Bottom Pos
+      </button>
+      <button id="prompt-btn-3" className="px-6 py-2 bg-rose-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+        Center Pos
       </button>
     </div>
   );

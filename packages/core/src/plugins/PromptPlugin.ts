@@ -73,26 +73,23 @@ export class PromptPlugin implements CursorPlugin {
     Object.assign(this.promptElement.style, {
       position: 'absolute',
       zIndex: '100000',
-      padding: '16px',
+      padding: '10px 16px',
       borderRadius: '8px',
-      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-      backgroundColor: 'white',
-      color: '#1e293b',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      color: 'white',
       fontSize: '15px',
-      fontFamily: 'system-ui, sans-serif',
+      fontFamily: 'sans-serif',
       transition: 'opacity 0.2s ease-in-out',
       opacity: '0',
-      minWidth: '250px',
+      minWidth: '200px',
       pointerEvents: 'auto',
       textAlign: 'center',
+      lineHeight: '1.4',
     });
 
     // Positioning & Position-specific styling
     if (position === 'cursor') {
-      Object.assign(this.promptElement.style, {
-        background: 'rgba(0, 0, 0, 0.85)',
-        color: 'white',
-      });
       const cursorRect = cursor.cursor.el.getBoundingClientRect();
       this.promptElement.style.left = `${cursorRect.left + window.scrollX + 30}px`;
       this.promptElement.style.top = `${cursorRect.top + window.scrollY - 10}px`;
@@ -118,8 +115,6 @@ export class PromptPlugin implements CursorPlugin {
     } else if (position === 'subtitle') {
       Object.assign(this.promptElement.style, {
         position: 'fixed',
-        background: 'rgba(0, 0, 0, 0.85)',
-        color: 'white',
         bottom: '40px',
         left: '50%',
         transform: 'translateX(-50%)',

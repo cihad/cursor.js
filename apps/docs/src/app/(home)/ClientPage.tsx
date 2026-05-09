@@ -426,8 +426,8 @@ c.move('#btn1')
         .click('#todo-check-1')
         .wait(1000)
         .hover('.todo-item-2')
-          .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
-          .wait(1000)
+        .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
+        .wait(1000)
         .if(
           () => !!settings.plugins.outline,
           (ctx) =>
@@ -439,14 +439,13 @@ c.move('#btn1')
         .wait(300)
         .click('#todo-delete-2')
         .wait(1000)
-          .if(
-            () => !!settings.plugins.prompt,
-            (ctx) =>
-              (ctx as any)
-                .prompt("Would you really like to delete this item?", {
-                   buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }]
-                 })
-          )
+        .if(
+          () => !!settings.plugins.prompt,
+          (ctx) =>
+            (ctx as any).prompt('Would you really like to delete this item?', {
+              buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }],
+            }),
+        )
         .wait(1000)
         .hover('#todo-confirm-delete')
         .wait(300)

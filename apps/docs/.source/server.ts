@@ -1,10 +1,11 @@
 // @ts-nocheck
-import * as __fd_glob_35 from "../content/docs/plugins/trail.mdx?collection=docs"
-import * as __fd_glob_34 from "../content/docs/plugins/theme.mdx?collection=docs"
-import * as __fd_glob_33 from "../content/docs/plugins/speech.mdx?collection=docs"
-import * as __fd_glob_32 from "../content/docs/plugins/sound.mdx?collection=docs"
-import * as __fd_glob_31 from "../content/docs/plugins/say.mdx?collection=docs"
-import * as __fd_glob_30 from "../content/docs/plugins/ripple.mdx?collection=docs"
+import * as __fd_glob_36 from "../content/docs/plugins/trail.mdx?collection=docs"
+import * as __fd_glob_35 from "../content/docs/plugins/theme.mdx?collection=docs"
+import * as __fd_glob_34 from "../content/docs/plugins/speech.mdx?collection=docs"
+import * as __fd_glob_33 from "../content/docs/plugins/sound.mdx?collection=docs"
+import * as __fd_glob_32 from "../content/docs/plugins/say.mdx?collection=docs"
+import * as __fd_glob_31 from "../content/docs/plugins/ripple.mdx?collection=docs"
+import * as __fd_glob_30 from "../content/docs/plugins/prompt.mdx?collection=docs"
 import * as __fd_glob_29 from "../content/docs/plugins/particle.mdx?collection=docs"
 import * as __fd_glob_28 from "../content/docs/plugins/outline.mdx?collection=docs"
 import * as __fd_glob_27 from "../content/docs/plugins/logging.mdx?collection=docs"
@@ -43,4 +44,4 @@ const create = server<typeof Config, import("fumadocs-mdx/runtime/types").Intern
   }
 }>({"doc":{"passthroughs":["extractedReferences"]}});
 
-export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "core-api/meta.json": __fd_glob_1, "plugins/meta.json": __fd_glob_2, }, {"index.mdx": __fd_glob_3, "installation.mdx": __fd_glob_4, "skill.mdx": __fd_glob_5, "core-api/click.mdx": __fd_glob_6, "core-api/cursor.mdx": __fd_glob_7, "core-api/destroy.mdx": __fd_glob_8, "core-api/do.mdx": __fd_glob_9, "core-api/hover.mdx": __fd_glob_10, "core-api/if.mdx": __fd_glob_11, "core-api/move.mdx": __fd_glob_12, "core-api/next.mdx": __fd_glob_13, "core-api/pause.mdx": __fd_glob_14, "core-api/play.mdx": __fd_glob_15, "core-api/removePlugin.mdx": __fd_glob_16, "core-api/setState.mdx": __fd_glob_17, "core-api/stop.mdx": __fd_glob_18, "core-api/type.mdx": __fd_glob_19, "core-api/until.mdx": __fd_glob_20, "core-api/use.mdx": __fd_glob_21, "core-api/wait.mdx": __fd_glob_22, "core-api/waitForEvent.mdx": __fd_glob_23, "plugins/custom-plugins.mdx": __fd_glob_24, "plugins/geminitts.mdx": __fd_glob_25, "plugins/indicator.mdx": __fd_glob_26, "plugins/logging.mdx": __fd_glob_27, "plugins/outline.mdx": __fd_glob_28, "plugins/particle.mdx": __fd_glob_29, "plugins/ripple.mdx": __fd_glob_30, "plugins/say.mdx": __fd_glob_31, "plugins/sound.mdx": __fd_glob_32, "plugins/speech.mdx": __fd_glob_33, "plugins/theme.mdx": __fd_glob_34, "plugins/trail.mdx": __fd_glob_35, });
+export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "core-api/meta.json": __fd_glob_1, "plugins/meta.json": __fd_glob_2, }, {"index.mdx": __fd_glob_3, "installation.mdx": __fd_glob_4, "skill.mdx": __fd_glob_5, "core-api/click.mdx": __fd_glob_6, "core-api/cursor.mdx": __fd_glob_7, "core-api/destroy.mdx": __fd_glob_8, "core-api/do.mdx": __fd_glob_9, "core-api/hover.mdx": __fd_glob_10, "core-api/if.mdx": __fd_glob_11, "core-api/move.mdx": __fd_glob_12, "core-api/next.mdx": __fd_glob_13, "core-api/pause.mdx": __fd_glob_14, "core-api/play.mdx": __fd_glob_15, "core-api/removePlugin.mdx": __fd_glob_16, "core-api/setState.mdx": __fd_glob_17, "core-api/stop.mdx": __fd_glob_18, "core-api/type.mdx": __fd_glob_19, "core-api/until.mdx": __fd_glob_20, "core-api/use.mdx": __fd_glob_21, "core-api/wait.mdx": __fd_glob_22, "core-api/waitForEvent.mdx": __fd_glob_23, "plugins/custom-plugins.mdx": __fd_glob_24, "plugins/geminitts.mdx": __fd_glob_25, "plugins/indicator.mdx": __fd_glob_26, "plugins/logging.mdx": __fd_glob_27, "plugins/outline.mdx": __fd_glob_28, "plugins/particle.mdx": __fd_glob_29, "plugins/prompt.mdx": __fd_glob_30, "plugins/ripple.mdx": __fd_glob_31, "plugins/say.mdx": __fd_glob_32, "plugins/sound.mdx": __fd_glob_33, "plugins/speech.mdx": __fd_glob_34, "plugins/theme.mdx": __fd_glob_35, "plugins/trail.mdx": __fd_glob_36, });

@@ -628,3 +628,40 @@ export function OutlineDemo() {
     </div>
   );
 }
+
+export function PromptDemo() {
+  useEffect(() => {
+    let isActive = true;
+    let cursor: any;
+
+    async function init() {
+      const { Cursor, PromptPlugin } = await import('@cursor.js/core');
+      if (!isActive) return;
+
+      cursor = new Cursor({ speed: 0.8 });
+      cursor.use(new PromptPlugin());
+
+      async function runLoop() {
+        if (!isActive) return;
+        await cursor.hover('#prompt-demo-btn').prompt('Do you really want to click this button?').click('#prompt-demo-btn').wait(1000);
+        if (!isActive) return;
+        runLoop();
+      }
+      runLoop();
+    }
+    init();
+
+    return () => {
+      isActive = false;
+      if (cursor) cursor.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center w-full h-full">
+      <button id="prompt-demo-btn" className="px-6 py-2 bg-rose-500 text-white rounded shadow-sm">
+        Delete Action
+      </button>
+    </div>
+  );
+}

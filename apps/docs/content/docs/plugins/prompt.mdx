@@ -1,0 +1,75 @@
+---
+title: Prompt
+description: A plugin that asks the user for confirmation via an interactive UI before proceeding.
+---
+
+## PromptPlugin
+
+The `PromptPlugin` pauses the cursor execution to display an interactive prompt dialog near the virtual cursor. It waits for the user to select an option (such as confirming or canceling) before continuing the sequence. This is especially useful for staging realistic UI tests and demonstration narratives.
+
+### Demo
+
+<iframe
+  src="/demos/prompt"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+### Options
+
+<auto-type-table
+  path="../../../../../packages/core/src/plugins/PromptPlugin.ts"
+  name="PromptPluginOptions"
+/>
+
+### Method Signature
+
+<auto-type-table
+  path="../../../../../packages/core/src/plugins/PromptPlugin.ts"
+  name="PromptOptions"
+/>
+
+### Usage
+
+```ts
+import { Cursor, PromptPlugin } from '@cursor.js/core';
+
+const cursor = new Cursor();
+
+// Install the plugin
+cursor.use(new PromptPlugin({
+  defaultPosition: 'cursor', // Display bubble by the cursor target
+}));
+
+// Use the .prompt() method within sequence
+cursor
+  .hover('.delete-btn')
+  .prompt('Are you sure you want to delete this?', {
+    buttons: [
+      { label: 'Yes', type: 'danger', onClick: 'continue' },
+      { label: 'No', type: 'secondary', onClick: () => console.log('Cancelled!') }
+    ]
+  })
+  .click('.delete-btn')
+  .wait(1000);
+```
+
+### Advanced Rendering
+
+You can override the default styled buttons and render your own fully custom DOM by passing a `render` callback.
+
+```ts
+cursor
+  .hover('.target')
+  .prompt('Provide input', {
+    render: (container, resolve) => {
+      container.innerHTML = `
+        <input type="text" id="my-input" />
+        <button id="my-submit">Submit</button>
+      `;
+      // When resolved, cursor resumes.
+      container.querySelector('#my-submit').onclick = () => {
+        resolve(container.querySelector('#my-input').value);
+      }
+    }
+  })
+```

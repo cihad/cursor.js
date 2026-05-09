@@ -16,6 +16,7 @@ import {
   SoundPlugin,
   LoggingPlugin,
   SayPlugin,
+  PromptPlugin,
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
@@ -80,6 +81,7 @@ type SettingsState = {
     trail: boolean;
     particle: boolean;
     say: boolean;
+    prompt: boolean;
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
@@ -161,6 +163,7 @@ const initialSettings: SettingsState = {
     trail: true,
     particle: true,
     say: true,
+    prompt: true,
     speech: false,
     geminiTts: true,
     outline: true,
@@ -422,7 +425,16 @@ c.move('#btn1')
         .click('#todo-check-1')
         .wait(1000)
         .hover('.todo-item-2')
-        .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
+          .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
+          .wait(1000)
+          .if(
+            () => !!settings.plugins.prompt,
+            (ctx) =>
+              (ctx as any)
+                .prompt("Would you really like to delete this item?", {
+                   buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }]
+                 })
+          )
         .wait(1000)
         .if(
           () => !!settings.plugins.outline,
@@ -605,6 +617,13 @@ c.move('#btn1')
       );
     } else {
       c.removePlugin('particle');
+    }
+
+    if (plugins.prompt) {
+      c.removePlugin('prompt');
+      c.use(new PromptPlugin());
+    } else {
+      c.removePlugin('prompt');
     }
 
     if (plugins.say) {

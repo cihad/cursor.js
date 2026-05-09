@@ -50,7 +50,9 @@ export class SpeechPlugin implements CursorPlugin {
     cursor.on('speech_requested', async (text: string, options?: any) => {
       const shouldSpeak = this.options.enabled && options?.speak !== false;
       const waitUntilFinished =
-        options?.speech?.waitUntilFinished ?? options?.waitUntilFinished ?? this.options.waitUntilFinished;
+        options?.speech?.waitUntilFinished ??
+        options?.waitUntilFinished ??
+        this.options.waitUntilFinished;
 
       if (shouldSpeak) {
         const playPromise = this.speak(text);
@@ -64,7 +66,9 @@ export class SpeechPlugin implements CursorPlugin {
 
     const sayPlugin = (cursor as any).plugins?.find((p: any) => p.name === 'say');
     if (!(sayPlugin instanceof SayPluginClass)) {
-      console.warn('[SpeechPlugin] SayPlugin not found, but Event Emitter will still process speech_requested events.');
+      console.warn(
+        '[SpeechPlugin] SayPlugin not found, but Event Emitter will still process speech_requested events.',
+      );
       return;
     }
 

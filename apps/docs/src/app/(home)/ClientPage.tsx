@@ -241,6 +241,7 @@ export function ClientPage() {
     { id: 2, text: 'Star on GitHub', completed: false },
   ]);
   const [todoInput, setTodoInput] = useState('');
+  const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
 
   const addTodo = () => {
     if (todoInput.trim()) {
@@ -427,15 +428,6 @@ c.move('#btn1')
         .hover('.todo-item-2')
           .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
           .wait(1000)
-          .if(
-            () => !!settings.plugins.prompt,
-            (ctx) =>
-              (ctx as any)
-                .prompt("Would you really like to delete this item?", {
-                   buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }]
-                 })
-          )
-        .wait(1000)
         .if(
           () => !!settings.plugins.outline,
           (ctx) =>
@@ -446,6 +438,19 @@ c.move('#btn1')
         .hover('#todo-delete-2')
         .wait(300)
         .click('#todo-delete-2')
+        .wait(1000)
+          .if(
+            () => !!settings.plugins.prompt,
+            (ctx) =>
+              (ctx as any)
+                .prompt("Would you really like to delete this item?", {
+                   buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }]
+                 })
+          )
+        .wait(1000)
+        .hover('#todo-confirm-delete')
+        .wait(300)
+        .click('#todo-confirm-delete')
         .wait(1000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
@@ -1679,13 +1684,36 @@ c.move('#btn1')
                               />
                               <span id={`todo-text-${todo.id}`}>{todo.text}</span>
                             </span>
-                            <button
-                              id={`todo-delete-${todo.id}`}
-                              onClick={() => deleteTodo(todo.id)}
-                              className="text-red-500 opacity-50 hover:opacity-100 transition-opacity"
-                            >
-                              Delete
-                            </button>
+                            {todoToDelete === todo.id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground mr-1">Sure?</span>
+                                <button
+                                  id={`todo-confirm-delete`}
+                                  onClick={() => {
+                                    deleteTodo(todo.id);
+                                    setTodoToDelete(null);
+                                  }}
+                                  className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  id={`todo-cancel-delete`}
+                                  onClick={() => setTodoToDelete(null)}
+                                  className="text-xs px-2 py-1 bg-slate-200 text-slate-800 rounded hover:bg-slate-300 transition-colors dark:bg-slate-700 dark:text-slate-200"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                id={`todo-delete-${todo.id}`}
+                                onClick={() => setTodoToDelete(todo.id)}
+                                className="text-red-500 opacity-50 hover:opacity-100 transition-opacity"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>

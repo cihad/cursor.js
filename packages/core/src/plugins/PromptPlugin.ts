@@ -45,9 +45,11 @@ export class PromptPlugin implements CursorPlugin {
     cursor.constructor.prototype.prompt = function (message: string, options?: PromptOptions) {
       return this.addStep(async () => {
         const waitSpeech = options?.waitUntilFinished ?? true;
-        
+
         // İkisi eşzamanlı çalışsın: Hem konuşma başlasın hem prompt menüsü açılsın
-        const speechPromise = cursor.emitAsync('speech_requested', message, { waitUntilFinished: waitSpeech });
+        const speechPromise = cursor.emitAsync('speech_requested', message, {
+          waitUntilFinished: waitSpeech,
+        });
 
         // Ekrana elementi çiz ve resolve'u bekle
         const promptPromise = new Promise<any>((resolve) => {
@@ -97,7 +99,7 @@ export class PromptPlugin implements CursorPlugin {
       const cursorRect = cursor.cursor.el.getBoundingClientRect();
       this.promptElement.style.left = `${cursorRect.left + window.scrollX + 30}px`;
       this.promptElement.style.top = `${cursorRect.top + window.scrollY - 10}px`;
-      
+
       // Track cursor position
       this.moveIntervalId = setInterval(() => {
         if (this.promptElement && cursor.cursor && cursor.cursor.el) {
@@ -181,7 +183,7 @@ export class PromptPlugin implements CursorPlugin {
 
     document.body.appendChild(this.promptElement);
     requestAnimationFrame(() => {
-        if (this.promptElement) this.promptElement.style.opacity = '1';
+      if (this.promptElement) this.promptElement.style.opacity = '1';
     });
   }
 }

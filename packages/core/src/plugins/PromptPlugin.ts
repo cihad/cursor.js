@@ -157,7 +157,8 @@ export class PromptPlugin implements CursorPlugin {
         const btn = document.createElement('button');
         btn.textContent = btnConfig.label;
         Object.assign(btn.style, {
-          padding: '8px 16px',
+          padding: '5px 12px',
+          fontSize: '13px',
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',

@@ -1485,31 +1485,10 @@ c.move('#btn1')
                         </SettingsAccordionContent>
                       </AccordionItem>
 
-                      {/* Say Plugin */}
                       {/* Prompt Plugin */}
                       <AccordionItem value="prompt" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Prompt UI (Interactivity)</div>
-                        </SettingsAccordionTrigger>
-                        <div className="absolute right-0 top-4">
-                          <Switch
-                            id="enable-prompt"
-                            checked={settings.plugins.prompt}
-                            onCheckedChange={(checked) =>
-                              dispatch({
-                                type: 'TOGGLE_PLUGIN',
-                                plugin: 'prompt',
-                                enabled: checked,
-                              })
-                            }
-                          />
-                        </div>
-                      </AccordionItem>
-
-                      {/* Prompt Plugin */}
-                      <AccordionItem value="prompt" className="relative">
-                        <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Prompt UI</div>
+                          <div className="flex items-center gap-1.5">Prompt UI (Interactive)</div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch

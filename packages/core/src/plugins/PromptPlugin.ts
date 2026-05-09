@@ -87,11 +87,24 @@ export class PromptPlugin implements CursorPlugin {
       textAlign: 'center',
     });
 
-    // Positioning
+    // Positioning & Position-specific styling
     if (position === 'cursor') {
+      Object.assign(this.promptElement.style, {
+        background: 'rgba(0, 0, 0, 0.85)',
+        color: 'white',
+      });
       const cursorRect = cursor.cursor.el.getBoundingClientRect();
       this.promptElement.style.left = `${cursorRect.left + window.scrollX + 30}px`;
       this.promptElement.style.top = `${cursorRect.top + window.scrollY - 10}px`;
+      
+      // Track cursor position
+      this.moveIntervalId = setInterval(() => {
+        if (this.promptElement && cursor.cursor && cursor.cursor.el) {
+          const rect = cursor.cursor.el.getBoundingClientRect();
+          this.promptElement.style.left = `${rect.left + window.scrollX + 30}px`;
+          this.promptElement.style.top = `${rect.top + window.scrollY - 10}px`;
+        }
+      }, 16);
     } else if (position === 'bottom') {
       this.promptElement.style.position = 'fixed';
       this.promptElement.style.bottom = '20px';
@@ -103,10 +116,15 @@ export class PromptPlugin implements CursorPlugin {
       this.promptElement.style.left = '50%';
       this.promptElement.style.transform = 'translate(-50%, -50%)';
     } else if (position === 'subtitle') {
-      this.promptElement.style.position = 'fixed';
-      this.promptElement.style.bottom = '40px';
-      this.promptElement.style.left = '50%';
-      this.promptElement.style.transform = 'translateX(-50%)';
+      Object.assign(this.promptElement.style, {
+        position: 'fixed',
+        background: 'rgba(0, 0, 0, 0.85)',
+        color: 'white',
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: '80%',
+      });
     }
 
     const cleanup = (value: any) => {

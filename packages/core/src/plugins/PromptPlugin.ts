@@ -10,7 +10,6 @@ export interface PromptButton {
 export interface PromptOptions {
   buttons?: PromptButton[];
   position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
-  onComplete?: (value: any) => void;
   render?: (container: HTMLElement, resolve: (value: any) => void) => void;
   waitUntilFinished?: boolean;
 }
@@ -54,8 +53,6 @@ export class PromptPlugin implements CursorPlugin {
         // Ekrana elementi çiz ve resolve'u bekle
         const promptPromise = new Promise<any>((resolve) => {
           self.showPrompt(this, message, options, resolve);
-        }).then((val) => {
-          if (options?.onComplete) options.onComplete(val);
         });
 
         // İkisinden birini sıraya koymak yerine ikisini de aynı anda bekliyoruz

@@ -73,3 +73,21 @@ cursor
     }
   })
 ```
+
+### Positions
+
+Like `say(...)`, the prompt can be displayed in several distinct locations on the screen:
+
+```ts
+// 1. Follows the ghost cursor (Default)
+cursor.prompt('Action required', { position: 'cursor' });
+
+// 2. Fixed at the bottom center of the screen
+cursor.prompt('Confirm below', { position: 'bottom' });
+
+// 3. Absolute center of the viewport (Modal style)
+cursor.prompt('Critical alert!', { position: 'center' });
+
+// 4. Slightly elevated from the bottom (like movie subtitles)
+cursor.prompt('Did you understand it?', { position: 'subtitle' });
+```

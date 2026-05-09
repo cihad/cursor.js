@@ -668,14 +668,14 @@ export function PromptDemo() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 items-center justify-center w-full h-full p-4">
-      <button id="prompt-btn-1" className="px-6 py-2 bg-blue-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+    <div className="flex flex-col gap-2 items-center justify-center w-full h-full p-4">
+      <button id="prompt-btn-1" className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded shadow-sm w-32 hover:opacity-90">
         Cursor Pos
       </button>
-      <button id="prompt-btn-2" className="px-6 py-2 bg-green-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+      <button id="prompt-btn-2" className="px-3 py-1.5 text-sm bg-green-500 text-white rounded shadow-sm w-32 hover:opacity-90">
         Bottom Pos
       </button>
-      <button id="prompt-btn-3" className="px-6 py-2 bg-rose-500 text-white rounded shadow-sm w-48 hover:opacity-90">
+      <button id="prompt-btn-3" className="px-3 py-1.5 text-sm bg-rose-500 text-white rounded shadow-sm w-32 hover:opacity-90">
         Center Pos
       </button>
     </div>

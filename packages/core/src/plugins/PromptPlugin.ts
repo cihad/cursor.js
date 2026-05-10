@@ -73,12 +73,12 @@ export class PromptPlugin implements CursorPlugin {
     this.promptElement.className = `cursor-js-prompt cursor-js-prompt-${position}`;
 
     // Common styling
-    this.promptElement.style.setProperty('corner-shape', 'squircle');
     Object.assign(this.promptElement.style, {
       position: 'absolute',
       zIndex: '100000',
       padding: '10px 16px',
       borderRadius: '16px',
+      cornerShape: 'squircle',
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       backgroundColor: 'rgba(0, 0, 0, 0.85)',
       color: 'white',

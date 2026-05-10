@@ -56,6 +56,7 @@ export class SayPlugin implements CursorPlugin {
     this.bubbleElement.textContent = text;
 
     // Common styling
+    this.bubbleElement.style.setProperty('corner-shape', 'squircle');
     Object.assign(this.bubbleElement.style, {
       position: 'absolute',
       zIndex: '10000',

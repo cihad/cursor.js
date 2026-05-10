@@ -60,7 +60,7 @@ export class SayPlugin implements CursorPlugin {
       position: 'absolute',
       zIndex: '10000',
       padding: '10px 16px',
-      borderRadius: '8px',
+      borderRadius: '16px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       fontSize: '15px',
       fontFamily: 'sans-serif',

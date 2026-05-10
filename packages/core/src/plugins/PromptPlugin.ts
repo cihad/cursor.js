@@ -77,7 +77,7 @@ export class PromptPlugin implements CursorPlugin {
       position: 'absolute',
       zIndex: '100000',
       padding: '10px 16px',
-      borderRadius: '8px',
+      borderRadius: '16px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       backgroundColor: 'rgba(0, 0, 0, 0.85)',
       color: 'white',

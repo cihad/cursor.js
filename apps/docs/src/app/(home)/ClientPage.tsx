@@ -32,7 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Info, Gem, Play, Pause, RotateCcw } from 'lucide-react';
+import { Info, Gem, Play, Pause, RotateCcw, Copy, Check } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -698,6 +698,15 @@ c.move('#btn1')
     setTimeout(() => {
       window.location.reload(); // Hard reload for simplicity since component state resets are complex
     }, 100);
+  };
+
+  const [copiedNpm, setCopiedNpm] = useState(false);
+  const [copiedNpx, setCopiedNpx] = useState(false);
+
+  const handleCopy = (text: string, setter: (val: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setter(true);
+    setTimeout(() => setter(false), 2000);
   };
 
   return (
@@ -1632,6 +1641,46 @@ c.move('#btn1')
                   </div>
                 }
               />
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-4 pt-8 w-full max-w-2xl justify-center z-10 relative">
+              <div className="flex items-center justify-between w-full md:w-auto bg-muted/50 border border-border rounded-lg px-4 py-2 relative group hover:bg-muted/80 transition-colors">
+                <code className="text-sm font-mono text-muted-foreground mr-8">
+                  npm i @cursor.js/core
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 absolute right-1"
+                  onClick={() => handleCopy('npm i @cursor.js/core', setCopiedNpm)}
+                  title="Copy npm command"
+                >
+                  {copiedNpm ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between w-full md:w-auto bg-muted/50 border border-border rounded-lg px-4 py-2 relative group hover:bg-muted/80 transition-colors">
+                <code className="text-sm font-mono text-muted-foreground mr-8">
+                  npx skills add cursor-js/cursor.js
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 absolute right-1"
+                  onClick={() => handleCopy('npx skills add cursor-js/cursor.js', setCopiedNpx)}
+                  title="Copy npx command"
+                >
+                  {copiedNpx ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </section>

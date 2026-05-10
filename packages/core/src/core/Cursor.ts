@@ -419,7 +419,13 @@ export class Cursor {
     return this;
   }
 
-  private emit(event: CursorEvent, ...args: any[]) {
+  public async emitAsync(event: CursorEvent, ...args: any[]): Promise<void> {
+    if (this.listeners[event]) {
+      await Promise.all(this.listeners[event].map((cb) => cb(...args)));
+    }
+  }
+
+  public emit(event: CursorEvent, ...args: any[]) {
     if (this.listeners[event]) {
       this.listeners[event].forEach((cb) => cb(...args));
     }

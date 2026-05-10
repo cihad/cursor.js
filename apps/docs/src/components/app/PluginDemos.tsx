@@ -309,9 +309,9 @@ export function SoundDemo() {
         >
           Click Target
         </span>
-        <Input 
+        <Input
           id="demo-sound-input"
-          placeholder="Type here..." 
+          placeholder="Type here..."
           className="w-40 text-center pointer-events-none"
           readOnly
         />
@@ -592,17 +592,14 @@ export function OutlineDemo() {
 
     const loop = async () => {
       if (!isActive) return;
-      c.move('#btn1')
-        .wait(300);
-      
+      c.move('#btn1').wait(300);
+
       // Outline circle
-      (c as any).outlineCircle('#btn1', { duration: 1000 })
-        .wait(500)
-        .move('#btn2')
-        .wait(300);
-      
+      (c as any).outlineCircle('#btn1', { duration: 1000 }).wait(500).move('#btn2').wait(300);
+
       // Outline underline
-      (c as any).outlineUnderline('#btn2', { duration: 1000, loopCount: 2 })
+      (c as any)
+        .outlineUnderline('#btn2', { duration: 1000, loopCount: 2 })
         .wait(500)
         .move(10, 10)
         .wait(500)
@@ -625,6 +622,68 @@ export function OutlineDemo() {
       <div id="btn2" className="text-xl font-bold text-slate-700 select-none">
         Underline Target
       </div>
+    </div>
+  );
+}
+
+export function PromptDemo() {
+  useEffect(() => {
+    let isActive = true;
+    let cursor: any;
+
+    async function init() {
+      const { Cursor, PromptPlugin } = await import('@cursor.js/core');
+      if (!isActive) return;
+
+      cursor = new Cursor({ speed: 0.8 });
+      cursor.use(new PromptPlugin());
+
+      async function runLoop() {
+        if (!isActive) return;
+        await cursor
+          .hover('#prompt-btn-1')
+          .prompt('Displaying near cursor...', { position: 'cursor' })
+          .wait(500)
+          .hover('#prompt-btn-2')
+          .prompt('Displaying at the bottom...', { position: 'bottom' })
+          .wait(500)
+          .hover('#prompt-btn-3')
+          .prompt('Displaying in the center modal style...', { position: 'center' })
+          .wait(1000);
+
+        if (!isActive) return;
+        runLoop();
+      }
+      runLoop();
+    }
+    init();
+
+    return () => {
+      isActive = false;
+      if (cursor) cursor.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-2 items-center justify-center w-full h-full p-4">
+      <button
+        id="prompt-btn-1"
+        className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded shadow-sm w-32 hover:opacity-90"
+      >
+        Cursor Pos
+      </button>
+      <button
+        id="prompt-btn-2"
+        className="px-3 py-1.5 text-sm bg-green-500 text-white rounded shadow-sm w-32 hover:opacity-90"
+      >
+        Bottom Pos
+      </button>
+      <button
+        id="prompt-btn-3"
+        className="px-3 py-1.5 text-sm bg-rose-500 text-white rounded shadow-sm w-32 hover:opacity-90"
+      >
+        Center Pos
+      </button>
     </div>
   );
 }

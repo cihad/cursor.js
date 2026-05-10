@@ -16,6 +16,7 @@ import {
   SoundPlugin,
   LoggingPlugin,
   SayPlugin,
+  PromptPlugin,
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
@@ -80,6 +81,7 @@ type SettingsState = {
     trail: boolean;
     particle: boolean;
     say: boolean;
+    prompt: boolean;
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
@@ -161,6 +163,7 @@ const initialSettings: SettingsState = {
     trail: true,
     particle: true,
     say: true,
+    prompt: true,
     speech: false,
     geminiTts: true,
     outline: true,
@@ -238,6 +241,7 @@ export function ClientPage() {
     { id: 2, text: 'Star on GitHub', completed: false },
   ]);
   const [todoInput, setTodoInput] = useState('');
+  const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
 
   const addTodo = () => {
     if (todoInput.trim()) {
@@ -435,6 +439,18 @@ c.move('#btn1')
         .wait(300)
         .click('#todo-delete-2')
         .wait(1000)
+        .if(
+          () => !!settings.plugins.prompt,
+          (ctx) =>
+            (ctx as any).prompt('Would you really like to delete this item?', {
+              buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }],
+            }),
+        )
+        .wait(1000)
+        .hover('#todo-confirm-delete')
+        .wait(300)
+        .click('#todo-confirm-delete')
+        .wait(1000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
         .do(() => {
@@ -605,6 +621,13 @@ c.move('#btn1')
       );
     } else {
       c.removePlugin('particle');
+    }
+
+    if (plugins.prompt) {
+      c.removePlugin('prompt');
+      c.use(new PromptPlugin());
+    } else {
+      c.removePlugin('prompt');
     }
 
     if (plugins.say) {
@@ -1462,10 +1485,64 @@ c.move('#btn1')
                         </SettingsAccordionContent>
                       </AccordionItem>
 
+                      {/* Prompt Plugin */}
+                      <AccordionItem value="prompt" className="relative">
+                        <SettingsAccordionTrigger hideIcon className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Prompt
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/prompt"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-prompt"
+                            checked={settings.plugins.prompt}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'prompt',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                      </AccordionItem>
+
                       {/* Say Plugin */}
                       <AccordionItem value="say" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Say (Speech Bubble)</div>
+                          <div className="flex items-center gap-1.5">
+                            Say
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/say"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch
@@ -1481,7 +1558,24 @@ c.move('#btn1')
                       {/* Speech Plugin */}
                       <AccordionItem value="speech" className="relative">
                         <SettingsAccordionTrigger hideIcon className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">Speech (Web Speech API)</div>
+                          <div className="flex items-center gap-1.5">
+                            Speech
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/speech"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch
@@ -1660,13 +1754,36 @@ c.move('#btn1')
                               />
                               <span id={`todo-text-${todo.id}`}>{todo.text}</span>
                             </span>
-                            <button
-                              id={`todo-delete-${todo.id}`}
-                              onClick={() => deleteTodo(todo.id)}
-                              className="text-red-500 opacity-50 hover:opacity-100 transition-opacity"
-                            >
-                              Delete
-                            </button>
+                            {todoToDelete === todo.id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground mr-1">Sure?</span>
+                                <button
+                                  id={`todo-confirm-delete`}
+                                  onClick={() => {
+                                    deleteTodo(todo.id);
+                                    setTodoToDelete(null);
+                                  }}
+                                  className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  id={`todo-cancel-delete`}
+                                  onClick={() => setTodoToDelete(null)}
+                                  className="text-xs px-2 py-1 bg-slate-200 text-slate-800 rounded hover:bg-slate-300 transition-colors dark:bg-slate-700 dark:text-slate-200"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                id={`todo-delete-${todo.id}`}
+                                onClick={() => setTodoToDelete(todo.id)}
+                                className="text-red-500 opacity-50 hover:opacity-100 transition-opacity"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>

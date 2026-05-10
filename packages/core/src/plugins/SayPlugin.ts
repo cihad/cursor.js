@@ -56,11 +56,13 @@ export class SayPlugin implements CursorPlugin {
     this.bubbleElement.textContent = text;
 
     // Common styling
+    // this.bubbleElement.style.setProperty('corner-shape', 'squircle');
     Object.assign(this.bubbleElement.style, {
       position: 'absolute',
       zIndex: '10000',
       padding: '10px 16px',
-      borderRadius: '8px',
+      borderRadius: '16px',
+      cornerShape: 'squircle',
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       fontSize: '15px',
       fontFamily: 'sans-serif',
@@ -123,8 +125,11 @@ export class SayPlugin implements CursorPlugin {
       if (this.bubbleElement) this.bubbleElement.style.opacity = '1';
     });
 
-    // Trigger onBeforeSay hook (for SpeechPlugin etc.)
+    // Trigger onBeforeSay hook (for backward compatibility if needed)
     await this.onBeforeSay?.(text, options);
+
+    // Trigger speech event via emitAsync
+    await cursor.emitAsync('speech_requested', text, options);
 
     // Track ghost cursor position if in cursor mode
     if (position === 'cursor') {

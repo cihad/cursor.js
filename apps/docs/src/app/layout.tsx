@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -48,6 +49,7 @@ export default function RootLayout({
             </footer>
           </div>
         </RootProvider>
+        <Analytics />
       </body>
     </html>
   );

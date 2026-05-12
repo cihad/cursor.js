@@ -1,5 +1,12 @@
 # docs
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [1cdf649]
+  - @cursor.js/core@0.7.1
+
 ## 0.5.0
 
 ### Minor Changes

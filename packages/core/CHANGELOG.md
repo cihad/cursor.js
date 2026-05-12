@@ -1,5 +1,11 @@
 # @cursor.js/core
 
+## 0.7.1
+
+### Patch Changes
+
+- 1cdf649: chore: test npm provenance publishing
+
 ## 0.7.0
 
 ### Minor Changes

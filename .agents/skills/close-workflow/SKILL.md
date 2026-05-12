@@ -1,31 +1,35 @@
 ---
 name: close-workflow
-description: Close out a repository task by performing final verification, merging the PR, and cleaning up local and remote branches. Use when the user says /close, close this task, finish up, wrap up, or asks for a Copilot-style close prompt adapted for Codex.
+description: Verify a PR deployment, ask for approval, merge the PR, and clean up local and remote branches. Use when the user says /close, close this task, finish up, wrap up, or asks for a Copilot-style close prompt adapted for Codex.
 ---
 
 # Close Workflow
 
-Use this skill when the user wants the current task fully wrapped up rather than more implementation.
+Use this skill when the user wants a PR fully closed out: deployment verified, approval collected, PR merged, and branches cleaned up.
 
 ## Closeout Steps
 
-1. Check the current state with `git status --short`.
-2. Review the relevant diff or changed files without reverting user changes.
-3. Confirm whether implementation, tests, formatting, changesets, commits, pushes, or PRs are still pending.
-4. If validation has not been run, run the most relevant focused checks unless the user only asked for a status summary.
-5. If a PR exists and is ready to land, merge it using the requested merge strategy or the repository's normal default for that kind of change.
-6. After merging, clean up the associated branches:
-   - delete the remote branch
-   - switch local checkout to a safe branch such as `main`
-   - delete the local feature branch
-   - prune stale remote-tracking refs if needed
-7. Produce a concise final report:
-   - what changed
-   - what was verified
-   - any user-owned unrelated changes left untouched
-   - what was not verified and why
-   - the merge result and cleaned-up branches
-   - the next concrete action, if one remains
+1. Verify local state with `git status --short` and `git branch --show-current`.
+2. Find the relevant open PR from the user-provided PR number or the current branch.
+3. Check PR checks and deployment status, especially Vercel preview deployments. Poll until the deployment reaches a final `success` or `failure` state when it is still pending.
+4. Present the deployment status and preview URL to the user. Ask for explicit approval before merging:
+   - If an ask UI tool is available, use it with clear `Yes` and `No` options.
+   - Otherwise ask a concise plain-text approval question.
+   - Stop if the user does not approve.
+5. Merge the PR into its base branch using the requested merge strategy or the repository's normal default.
+6. Clean up branches after a successful merge:
+   - switch to the PR base branch, such as `main`
+   - pull the latest base branch from origin
+   - delete the remote feature branch if GitHub did not already delete it
+   - delete the local feature branch with `git branch -d <branch-name>`
+   - run `git remote prune origin`
+7. If local branch deletion fails because Git does not see the branch as fully merged, ask before using `git branch -D <branch-name>`.
+8. Confirm the result to the user:
+   - PR merged
+   - deployment status and preview URL checked
+   - remote branch deleted
+   - local branch deleted
+   - repository state after cleanup
 
-Do not merge or delete branches only when the user explicitly asks for a status-only closeout.
+Do not merge or delete branches when the user asks for a status-only closeout.
 

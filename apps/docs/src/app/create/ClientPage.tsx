@@ -405,7 +405,7 @@ export function ClientPage() {
             variant="ghost"
             size="sm"
             className="mb-4 w-full justify-start text-sm"
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = '/')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Homepage

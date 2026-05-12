@@ -3,6 +3,14 @@
 // The TypeScript compiler & Webpack will alias to this file to prevent build failures.
 
 // Make a catch-all proxy so any imported variable correctly maps to a no-op function / empty object
+import {
+  PromptPlugin,
+  SayPlugin,
+  type Cursor,
+  type PromptPositioner,
+  type SayPositioner,
+} from '@cursor.js/core';
+
 const mockProxy = new Proxy(
   {},
   {
@@ -42,6 +50,40 @@ export const ParticlePlugin = class {
   install() {}
   destroy() {}
 };
+
+export const FloatingSayPlugin = class {
+  name = 'say';
+  private fallback = new SayPlugin();
+
+  constructor(_args?: unknown) {}
+  install(cursor: Cursor) {
+    this.fallback.install(cursor);
+  }
+  onDestroy() {
+    this.fallback.onDestroy?.();
+  }
+};
+
+export function createFloatingSayPositioner(): SayPositioner {
+  return () => {};
+}
+
+export const FloatingPromptPlugin = class {
+  name = 'prompt';
+  private fallback = new PromptPlugin();
+
+  constructor(_args?: unknown) {}
+  install(cursor: Cursor) {
+    this.fallback.install(cursor);
+  }
+  onDestroy() {
+    this.fallback.onDestroy?.();
+  }
+};
+
+export function createFloatingPromptPositioner(): PromptPositioner {
+  return () => {};
+}
 
 export const ScrollIllusionPlugin = class {
   name = 'scroll-illusion-mock';

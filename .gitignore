@@ -25,3 +25,6 @@ dist-ssr
 .turbo
 apps/docs/.next
 
+# Local Codex config
+.codex/config.toml
+

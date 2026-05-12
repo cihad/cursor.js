@@ -17,6 +17,11 @@ export function baseOptions(): BaseLayoutProps {
         url: '/pro',
         active: 'nested-url',
       },
+      {
+        text: 'Create',
+        url: '/create',
+        active: 'nested-url',
+      },
     ],
   };
 }

@@ -45,6 +45,8 @@ function patchTree(node: any): any {
   return node;
 }
 
+import { SiteFooter } from '@/components/SiteFooter';
+
 export default function Layout({ children }: { children: ReactNode }) {
   const { nav, ...base } = baseOptions();
 
@@ -55,8 +57,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DocsLayout tree={patchedTree as any} {...base} nav={{ ...nav, mode: 'top' }}>
-      {children}
-    </DocsLayout>
+    <>
+      <DocsLayout tree={patchedTree as any} {...base} nav={{ ...nav, mode: 'top' }}>
+        {children}
+      </DocsLayout>
+      <SiteFooter />
+    </>
   );
 }

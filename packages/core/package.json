@@ -1,6 +1,10 @@
 {
   "name": "@cursor.js/core",
   "private": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "version": "0.7.0",
   "type": "module",
   "main": "./dist/cursor.umd.cjs",

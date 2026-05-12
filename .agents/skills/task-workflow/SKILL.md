@@ -79,5 +79,6 @@ After approval:
 - Stage only the intended files.
 - Use the `git-commit` skill to generate a Conventional Commit message with the primary task type.
 - Push with `git push -u origin <branch-name>`.
+- Open the PR as ready for review by default. Only create a draft PR when the user explicitly asks for draft status.
 - Use the GitHub plugin/app to open a PR with a concise title, summary, tests, and changeset note.
 

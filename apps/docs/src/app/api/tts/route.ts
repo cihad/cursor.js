@@ -6,87 +6,109 @@ import { ttsCache, licenses } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { generateGeminiTTS } from '@/lib/gemini';
 
-function generateHash(input: string): string {
-  return crypto.createHash('md5').update(input).digest('hex');
+const CDN_AUDIO_BASE_URL = 'https://cdn.cursorjs.com/voices';
+
+interface TTSRequestBody {
+  prompt?: unknown;
+  text?: unknown;
+  speaker?: unknown;
+  style?: unknown;
+  language?: unknown;
+  model?: unknown;
+  licenseKey?: unknown;
+}
+
+interface TTSHashPayload {
+  prompt: string;
+  text: string;
+  speaker: string;
+  language: string;
+  style: string;
+  model: string;
+}
+
+function generateHash(payload: TTSHashPayload): string {
+  return crypto.createHash('sha1').update(JSON.stringify(payload)).digest('hex');
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0;
 }
 
 export async function POST(req: Request) {
   try {
-    // 1. İstek gövdesinden (body) bilgileri al
-    const body = await req.json();
+    const body = (await req.json()) as TTSRequestBody;
     const { text, speaker, style, language, model, licenseKey } = body;
 
-    if (!text || !speaker || !style || !language || !model) {
+    if (
+      !isNonEmptyString(text) ||
+      !isNonEmptyString(speaker) ||
+      !isNonEmptyString(style) ||
+      !isNonEmptyString(language) ||
+      !isNonEmptyString(model)
+    ) {
       return NextResponse.json(
         { error: 'text, speaker, style, language and model are required properties' },
         { status: 400 },
       );
     }
 
-    // 2. Lisans Kontrolü (1. Yöntem: Lisans Anahtarı Modeli)
     let isAuthorized = false;
+    const licenseKeyValue = isNonEmptyString(licenseKey) ? licenseKey : undefined;
 
-    // Geliştirme ortamı veya kendi sitenizden (ör: cursor.js dokümantasyon sayfası) gelen istekler serbest olabilir.
-    // Şimdilik sadece dışarıdan gelen lisans testlerini yönetiyoruz.
-    if (licenseKey) {
+    if (licenseKeyValue) {
       const [license] = await db
         .select()
         .from(licenses)
-        .where(eq(licenses.key, licenseKey))
+        .where(eq(licenses.key, licenseKeyValue))
         .limit(1);
 
       if (!license) {
-        return NextResponse.json({ error: 'Geçersiz lisans anahtarı' }, { status: 401 });
+        return NextResponse.json({ error: 'Invalid license key' }, { status: 401 });
       }
 
       if (license.status !== 'active') {
-        return NextResponse.json({ error: 'Lisansınız aktif değil' }, { status: 403 });
+        return NextResponse.json({ error: 'Your license is not active' }, { status: 403 });
       }
 
       if (license.credits <= 0) {
-        return NextResponse.json({ error: 'TTS kredi limitiniz doldu' }, { status: 402 });
+        return NextResponse.json({ error: 'Your TTS credit limit has been reached' }, { status: 402 });
       }
 
       isAuthorized = true;
-    }
-    // Eğer bir master key'iniz varsa veya host origin'den istek geliyorsa izin verebilirsiniz
-    // else if (req.headers.get('origin') === 'https://siteniz.com') { isAuthorized = true; }
-    else {
-      // Şimdilik test amaçlı lisanssız kısıtlamayalım ancak prod öncesi isAuthorized = false yapmalısınız.
+    } else {
       isAuthorized = true;
     }
 
     if (!isAuthorized) {
-      return NextResponse.json({ error: 'Lisans Anahtarı Gerekli' }, { status: 401 });
+      return NextResponse.json({ error: 'License key is required' }, { status: 401 });
     }
 
-    // 3. Ön Bellek (Cache) Kontrolü
-    const prompt = style || `Lütfen aşağıdaki metni seslendir:\n${text}`;
-    const hashData = `${text}-${speaker}-${language}-${style}-${model}`;
-    const hash = generateHash(hashData);
+    const prompt = isNonEmptyString(body.prompt) ? body.prompt : style;
+    const hashPayload: TTSHashPayload = {
+      prompt,
+      text,
+      speaker,
+      language,
+      style,
+      model,
+    };
+    const hash = generateHash(hashPayload);
+    const audioPath = `tts/${hash}.wav`;
+    const audioUrl = `${CDN_AUDIO_BASE_URL}/${hash}.wav`;
 
-    const [cachedEntry] = await db.select().from(ttsCache).where(eq(ttsCache.hash, hash)).limit(1);
+    console.log(`[TTS] Generating audio for ${hash}: ${text.substring(0, 30)}...`);
+    const audioBuffer = await generateGeminiTTS(text, speaker, prompt, model);
 
-    if (cachedEntry) {
-      // Sesi bulduk! Maliyet 0, hız maksimum.
-      return NextResponse.json({
-        url: cachedEntry.audioUrl,
-        cached: true,
-      });
-    }
-
-    // 4. Cache'de yoksa Gemini TTS ile üret
-    console.log(`[TTS] Üretiliyor: ${text.substring(0, 30)}... (Model: ${model}, Style: ${style})`);
-    const audioBuffer = await generateGeminiTTS(text, speaker, style, model);
-
-    // 5. Üretilen sesi Vercel Storage (Blob) üzerine yükle
-    const blob = await put(`tts/${hash}.wav`, audioBuffer, {
+    await put(audioPath, audioBuffer, {
       access: 'public',
-      contentType: 'audio/mpeg',
+      contentType: 'audio/wav',
+      addRandomSuffix: false,
+      allowOverwrite: true,
     });
 
-    // 6. SQL Veritabanına kaydet
-    await db.insert(ttsCache).values({
+    const [cachedEntry] = await db.select().from(ttsCache).where(eq(ttsCache.hash, hash)).limit(1);
+    const cacheValues = {
       hash,
       prompt,
       text,
@@ -94,27 +116,30 @@ export async function POST(req: Request) {
       style,
       model,
       language,
-      audioUrl: blob.url,
-    });
+      audioUrl,
+    };
 
-    // 7. Eğer müşteri istek atmışsa Bakiyeden (Credit) düş
-    if (licenseKey) {
+    if (cachedEntry) {
+      await db.update(ttsCache).set(cacheValues).where(eq(ttsCache.hash, hash));
+    } else {
+      await db.insert(ttsCache).values(cacheValues);
+    }
+
+    if (licenseKeyValue) {
       await db
         .update(licenses)
         .set({ credits: sql`${licenses.credits} - 1` })
-        .where(eq(licenses.key, licenseKey));
+        .where(eq(licenses.key, licenseKeyValue));
     }
 
     return NextResponse.json({
-      url: blob.url,
+      url: audioUrl,
+      hash,
       cached: false,
     });
-  } catch (error: any) {
-    console.error('API /tts error full:', JSON.stringify(error, null, 2));
-    console.error('API /tts error message:', error.message);
-    return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
-      { status: 500 },
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('API /tts error:', error);
+    return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
   }
 }

@@ -9,6 +9,14 @@ const hasPro = fs.existsSync(path.resolve(process.cwd(), '../../packages/pro/pac
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  async rewrites() {
+    return [
+      {
+        source: '/voices/:path*',
+        destination: 'https://thagcvsquukldham.public.blob.vercel-storage.com/tts/:path*',
+      },
+    ];
+  },
 };
 
 if (!hasPro) {

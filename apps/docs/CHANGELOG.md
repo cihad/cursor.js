@@ -1,5 +1,26 @@
 # docs
 
+## 0.5.0
+
+### Minor Changes
+
+- 614a887: Add installation commands to the landing page under Run Live Demo section.
+- 8d93601: feat: add a simple footer to the docs layout
+- 7aa5fc4: feat: integrate Particle plugin into core API and docs landing page
+
+### Patch Changes
+
+- b2cbb52: fix: prevent iframe scroll in ClientPage
+- ec21fc9: feat: add interactive sandbox environment to landing page
+- Updated dependencies [4a0e15b]
+- Updated dependencies [1a5e355]
+- Updated dependencies [7f0d3c4]
+- Updated dependencies [e69d178]
+- Updated dependencies [33de33f]
+- Updated dependencies [7aa5fc4]
+- Updated dependencies [04f4d27]
+  - @cursor.js/core@0.7.0
+
 ## 0.4.2
 
 ### Patch Changes

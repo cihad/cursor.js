@@ -1,5 +1,20 @@
 # @cursor.js/core
 
+## 0.7.0
+
+### Minor Changes
+
+- 1a5e355: feat: add code-review and grill-me AI skills
+- 04f4d27: feat: add `PromptPlugin` with customizable UI, and introduce asynchronous event emitter (`emitAsync`) for seamless speech integration with plugins like `SayPlugin` and `SpeechPlugin`.
+
+### Patch Changes
+
+- 4a0e15b: Refactor docs landing page controls into a floating player component.
+- 7f0d3c4: fix: increase ripple plugin z-index so click effects aren't hidden behind regular page elements
+- e69d178: fix: prevent native scroll on element focus to avoid iframe scroll jump
+- 33de33f: fix: Add natural hesitation delay between click and input typing to allow visual effects to render
+- 7aa5fc4: feat: integrate Particle plugin into core API and docs landing page
+
 ## 0.6.1
 
 ### Patch Changes

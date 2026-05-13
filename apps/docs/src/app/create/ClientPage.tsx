@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Info,
   ArrowLeft,
+  MessageCircleMore,
 } from 'lucide-react';
 import {
   Cursor,
@@ -33,7 +34,14 @@ import {
   LoggingPlugin,
   SpeechPlugin,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin, OutlinePlugin } from '@cursor.js/pro';
+import {
+  TrailPlugin,
+  ParticlePlugin,
+  GeminiTTSPlugin,
+  OutlinePlugin,
+  createFloatingSayPositioner,
+  createFloatingPromptPositioner,
+} from '@cursor.js/pro';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import {
   Dialog,
@@ -64,6 +72,8 @@ type SettingsState = {
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
+    floatingSay: boolean;
+    floatingPrompt: boolean;
   };
   rippleConfig: { color: string; duration: number; size: number };
   trailConfig: { length: number; thickness: number; color: string; fadeDuration: number };
@@ -127,11 +137,13 @@ const initialSettings: SettingsState = {
     logging: false,
     trail: true,
     particle: true,
-    say: true,
-    prompt: true,
+    say: false,
+    prompt: false,
     speech: false,
     geminiTts: true,
     outline: true,
+    floatingSay: true,
+    floatingPrompt: true,
   },
   rippleConfig: { color: '#000000', duration: 600, size: 50 },
   trailConfig: { length: 40, thickness: 7, color: '#0099ff', fadeDuration: 500 },
@@ -279,8 +291,9 @@ export function ClientPage() {
     if (settings.plugins.ripple) activeCore.push('RipplePlugin');
     if (settings.plugins.sound) activeCore.push('SoundPlugin');
     if (settings.plugins.logging) activeCore.push('LoggingPlugin');
-    if (settings.plugins.say) activeCore.push('SayPlugin');
-    if (settings.plugins.prompt) activeCore.push('PromptPlugin');
+    if (settings.plugins.say && !settings.plugins.floatingSay) activeCore.push('SayPlugin');
+    if (settings.plugins.prompt && !settings.plugins.floatingPrompt)
+      activeCore.push('PromptPlugin');
     if (settings.plugins.speech) activeCore.push('SpeechPlugin');
 
     // Pro
@@ -288,6 +301,8 @@ export function ClientPage() {
     if (settings.plugins.particle) activePro.push('ParticlePlugin');
     if (settings.plugins.geminiTts) activePro.push('GeminiTTSPlugin');
     if (settings.plugins.outline) activePro.push('OutlinePlugin');
+    if (settings.plugins.floatingSay) activePro.push('createFloatingSayPositioner');
+    if (settings.plugins.floatingPrompt) activePro.push('createFloatingPromptPositioner');
 
     coreImports.push(...activeCore);
     proImports.push(...activePro);
@@ -333,8 +348,18 @@ export function ClientPage() {
       initLines.push(`cursor.use(new TrailPlugin${getPluginDiff('trailConfig')});`);
     if (settings.plugins.particle)
       initLines.push(`cursor.use(new ParticlePlugin${getPluginDiff('particleConfig')});`);
-    if (settings.plugins.say) initLines.push(`cursor.use(new SayPlugin());`);
-    if (settings.plugins.prompt) initLines.push(`cursor.use(new PromptPlugin());`);
+    if (settings.plugins.floatingSay) {
+      initLines.push(`cursor.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));`);
+    } else if (settings.plugins.say) {
+      initLines.push(`cursor.use(new SayPlugin());`);
+    }
+    if (settings.plugins.floatingPrompt) {
+      initLines.push(
+        `cursor.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));`,
+      );
+    } else if (settings.plugins.prompt) {
+      initLines.push(`cursor.use(new PromptPlugin());`);
+    }
     if (settings.plugins.speech)
       initLines.push(`cursor.use(new SpeechPlugin${getPluginDiff('speechConfig')});`);
     if (settings.plugins.outline)
@@ -372,8 +397,12 @@ export function ClientPage() {
     if (settings.plugins.ripple) cursor.use(new RipplePlugin(settings.rippleConfig));
     if (settings.plugins.trail) cursor.use(new TrailPlugin(settings.trailConfig));
     if (settings.plugins.particle) cursor.use(new ParticlePlugin(settings.particleConfig));
-    if (settings.plugins.say) cursor.use(new SayPlugin());
-    if (settings.plugins.prompt) cursor.use(new PromptPlugin());
+    if (settings.plugins.floatingSay) {
+      cursor.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
+    } else if (settings.plugins.say) cursor.use(new SayPlugin());
+    if (settings.plugins.floatingPrompt) {
+      cursor.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
+    } else if (settings.plugins.prompt) cursor.use(new PromptPlugin());
     if (settings.plugins.speech) cursor.use(new SpeechPlugin(settings.speechConfig));
     if (settings.plugins.outline) cursor.use(new OutlinePlugin(settings.outlineConfig));
     if (settings.plugins.geminiTts && process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
@@ -521,6 +550,19 @@ export function ClientPage() {
             }
           />
           <SidebarItem
+            id="floatingSay"
+            label="Floating Say"
+            icon={MessageCircleMore}
+            activeCategory={activeCategory}
+            onClick={() => setActiveCategory('floatingSay')}
+            isPro
+            hasSwitch
+            switchChecked={settings.plugins.floatingSay}
+            onSwitchChange={(val) =>
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingSay', enabled: val })
+            }
+          />
+          <SidebarItem
             id="prompt"
             hasDemo
             demoUrl="/demos/prompt"
@@ -532,6 +574,19 @@ export function ClientPage() {
             switchChecked={settings.plugins.prompt}
             onSwitchChange={(val) =>
               dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'prompt', enabled: val })
+            }
+          />
+          <SidebarItem
+            id="floatingPrompt"
+            label="Floating Prompt"
+            icon={MessageCircleMore}
+            activeCategory={activeCategory}
+            onClick={() => setActiveCategory('floatingPrompt')}
+            isPro
+            hasSwitch
+            switchChecked={settings.plugins.floatingPrompt}
+            onSwitchChange={(val) =>
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingPrompt', enabled: val })
             }
           />
           <SidebarItem
@@ -896,12 +951,30 @@ export function ClientPage() {
               </div>
             </div>
           )}
+          {activeCategory === 'floatingSay' && (
+            <div
+              className={`space-y-6 ${!settings.plugins.floatingSay ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className="text-muted-foreground text-sm">
+                Pro positioning for <code>.say()</code> bubbles using Floating UI.
+              </div>
+            </div>
+          )}
           {activeCategory === 'prompt' && (
             <div
               className={`space-y-6 ${!settings.plugins.prompt ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <div className="text-muted-foreground text-sm">
                 No extra configuration for this plugin yet.
+              </div>
+            </div>
+          )}
+          {activeCategory === 'floatingPrompt' && (
+            <div
+              className={`space-y-6 ${!settings.plugins.floatingPrompt ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className="text-muted-foreground text-sm">
+                Pro positioning for <code>.prompt()</code> popups using Floating UI.
               </div>
             </div>
           )}

@@ -20,7 +20,14 @@ import {
   SpeechPlugin,
   defaultTheme,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin, GeminiTTSPlugin, OutlinePlugin } from '@cursor.js/pro';
+import {
+  TrailPlugin,
+  ParticlePlugin,
+  GeminiTTSPlugin,
+  OutlinePlugin,
+  createFloatingSayPositioner,
+  createFloatingPromptPositioner,
+} from '@cursor.js/pro';
 
 import {
   Carousel,
@@ -85,6 +92,8 @@ type SettingsState = {
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
+    floatingSay: boolean;
+    floatingPrompt: boolean;
   };
   rippleConfig: {
     color: string;
@@ -162,11 +171,13 @@ const initialSettings: SettingsState = {
     logging: false,
     trail: true,
     particle: true,
-    say: true,
-    prompt: true,
+    say: false,
+    prompt: false,
     speech: false,
     geminiTts: true,
     outline: true,
+    floatingSay: true,
+    floatingPrompt: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -336,28 +347,47 @@ c.move('#btn1')
       setDemoState('running');
     });
 
+    // Seed action-augmenting plugins before building the demo sequence.
+    if (settings.plugins.floatingPrompt) {
+      c.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
+    } else if (settings.plugins.prompt) {
+      c.use(new PromptPlugin());
+    }
+
+    if (settings.plugins.floatingSay) {
+      c.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
+    } else if (settings.plugins.say) {
+      c.use(new SayPlugin());
+    }
+
+    if (settings.plugins.outline) {
+      c.use(new OutlinePlugin());
+    }
+
     // Wrap the repeatable scenario in a function and link recursively
     const buildDemoSequence = () => {
       if (!isActive) return;
+      const hasSay = settings.plugins.floatingSay || settings.plugins.say;
+      const hasPrompt = settings.plugins.floatingPrompt || settings.plugins.prompt;
 
-      const sequence = c
+      let sequence = c
         .do(() => c.pause()) // Sequence natural pause point
         .wait(500)
         .setState({ size: settings.coreConfig.size });
 
-      const afterSay = sequence.say('Let me introduce you to Cursor.js, which is who I am.', {
-        duration: 3000,
-        position: 'subtitle',
-        waitUntilFinished: false,
-      });
+      if (hasSay) {
+        sequence = sequence.say('Let me introduce you to Cursor.js, which is who I am.', {
+          waitUntilFinished: false,
+        });
+      }
 
       // Sadece outline aktifse çalıştır
       const afterOutline = settings.plugins.outline
-        ? ((afterSay as any).outlineCircle('#hero-title', {
+        ? ((sequence as any).outlineCircle('#hero-title', {
             duration: 1500,
             loopCount: 1,
           }) as Cursor)
-        : afterSay;
+        : sequence;
 
       afterOutline
         .wait(1000)
@@ -370,13 +400,22 @@ c.move('#btn1')
         )
         .if(
           () =>
+            hasSay &&
             document.querySelector<HTMLInputElement>('#demo-email')?.value !== 'hello@cursor.js',
           (ctx) =>
-            ctx
-              .hover('#demo-email')
-              .say('Let me fill this out for you!', { duration: 2000, position: 'subtitle' })
+            ctx.hover('#demo-email').say('Let me fill this out for you!', {
+              duration: 2000,
+              position: 'subtitle',
+            })
               .do(() => isActive && setEmail(''))
               .type('#demo-email', 'hello@cursor.js'),
+        )
+        .if(
+          () =>
+            !hasSay &&
+            document.querySelector<HTMLInputElement>('#demo-email')?.value !== 'hello@cursor.js',
+          (ctx) =>
+            ctx.hover('#demo-email').do(() => isActive && setEmail('')).type('#demo-email', 'hello@cursor.js'),
         )
         .if(
           () => document.querySelector<HTMLInputElement>('#demo-password')?.value !== 'secret',
@@ -389,7 +428,7 @@ c.move('#btn1')
               .wait(600),
         )
         .hover('#demo-submit')
-        .say('And click submit!', { duration: 1500 })
+        .if(() => hasSay, (ctx) => ctx.say('And click submit!', { duration: 1500 }))
         .wait(300)
         .click('#demo-submit')
         .wait(1000)
@@ -426,7 +465,7 @@ c.move('#btn1')
         .click('#todo-check-1')
         .wait(1000)
         .hover('.todo-item-2')
-        .say("Let's delete this one.", { duration: 1500, position: 'subtitle' })
+        .if(() => hasSay, (ctx) => ctx.say("Let's delete this one.", { duration: 1500, position: 'subtitle' }))
         .wait(1000)
         .if(
           () => !!settings.plugins.outline,
@@ -440,9 +479,9 @@ c.move('#btn1')
         .click('#todo-delete-2')
         .wait(1000)
         .if(
-          () => !!settings.plugins.prompt,
+          () => hasPrompt,
           (ctx) =>
-            (ctx as any).prompt('Would you really like to delete this item?', {
+            ctx.prompt('Would you really like to delete this item?', {
               buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }],
             }),
         )
@@ -623,14 +662,20 @@ c.move('#btn1')
       c.removePlugin('particle');
     }
 
-    if (plugins.prompt) {
+    if (plugins.floatingPrompt) {
+      c.removePlugin('prompt');
+      c.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
+    } else if (plugins.prompt) {
       c.removePlugin('prompt');
       c.use(new PromptPlugin());
     } else {
       c.removePlugin('prompt');
     }
 
-    if (plugins.say) {
+    if (plugins.floatingSay) {
+      c.removePlugin('say');
+      c.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
+    } else if (plugins.say) {
       c.removePlugin('say');
       c.use(new SayPlugin());
     } else {
@@ -951,6 +996,53 @@ c.move('#btn1')
                                 disabled
                               />
                             </div>
+                          </div>
+                        </SettingsAccordionContent>
+                      </AccordionItem>
+
+                      {/* Floating Say Plugin */}
+                      <AccordionItem value="floating-say" className="relative">
+                        <SettingsAccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Floating Say
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="z-[9999999] w-[320px] rounded-lg border bg-background p-4 text-sm shadow-md"
+                              >
+                                <p>
+                                  Upgrades speech bubbles with Floating UI placement, collision
+                                  handling, and automatic repositioning.
+                                </p>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-floating-say"
+                            checked={settings.plugins.floatingSay}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'floatingSay',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Provides the same <code>.say()</code> action with smarter popup
+                              positioning.
+                            </p>
                           </div>
                         </SettingsAccordionContent>
                       </AccordionItem>
@@ -1562,6 +1654,53 @@ c.move('#btn1')
                             }
                           />
                         </div>
+                      </AccordionItem>
+
+                      {/* Floating Prompt Plugin */}
+                      <AccordionItem value="floating-prompt" className="relative">
+                        <SettingsAccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Floating Prompt
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="z-[9999999] w-[320px] rounded-lg border bg-background p-4 text-sm shadow-md"
+                              >
+                                <p>
+                                  Upgrades interactive prompts with Floating UI placement, collision
+                                  handling, and automatic repositioning.
+                                </p>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-floating-prompt"
+                            checked={settings.plugins.floatingPrompt}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'floatingPrompt',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Provides the same <code>.prompt()</code> action with smarter popup
+                              positioning.
+                            </p>
+                          </div>
+                        </SettingsAccordionContent>
                       </AccordionItem>
 
                       {/* Speech Plugin */}

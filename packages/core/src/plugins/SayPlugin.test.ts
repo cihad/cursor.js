@@ -1,13 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Cursor } from '../core/Cursor';
 import { SayPlugin } from './SayPlugin';
 
 describe('SayPlugin', () => {
   let cursor: Cursor;
+  let rectSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     cursor = new Cursor();
     document.body.innerHTML = '';
+  });
+
+  afterEach(() => {
+    cursor.destroy();
+    rectSpy?.mockRestore();
   });
 
   it('should add say method to cursor', () => {
@@ -29,5 +35,80 @@ describe('SayPlugin', () => {
 
     // Wait for the cursor queue to finish and the bubble to fade out
     await new Promise((resolve) => setTimeout(resolve, 300));
+  });
+
+  it('keeps cursor speech bubbles inside the viewport', async () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 320 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 240 });
+    Object.defineProperty(window, 'scrollX', { configurable: true, value: 0 });
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+
+    cursor.cursor.el.getBoundingClientRect = () =>
+      ({
+        left: 300,
+        top: 220,
+        right: 320,
+        bottom: 240,
+        width: 20,
+        height: 20,
+        x: 300,
+        y: 220,
+        toJSON: () => {},
+      }) as DOMRect;
+
+    rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains('cursor-js-speech-bubble')) {
+        return {
+          left: 0,
+          top: 0,
+          right: 140,
+          bottom: 48,
+          width: 140,
+          height: 48,
+          x: 0,
+          y: 0,
+          toJSON: () => {},
+        } as DOMRect;
+      }
+
+      return {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      } as DOMRect;
+    });
+
+    cursor.use(new SayPlugin());
+    cursor.say('Near the edge', { duration: 1000 });
+    await cursor;
+
+    const bubble = document.querySelector<HTMLElement>('.cursor-js-speech-bubble');
+    expect(bubble).not.toBeNull();
+    expect(Number.parseFloat(bubble?.style.left || '0')).toBeLessThanOrEqual(172);
+    expect(Number.parseFloat(bubble?.style.top || '0')).toBeLessThanOrEqual(184);
+  });
+
+  it('uses a custom positioner when one is provided', async () => {
+    const cleanup = vi.fn();
+    const positioner = vi.fn(({ bubbleElement }) => {
+      bubbleElement.style.left = '12px';
+      bubbleElement.style.top = '34px';
+      return cleanup;
+    });
+
+    cursor.use(new SayPlugin({ positioner }));
+    cursor.say('Custom position', { duration: 1, waitUntilFinished: true });
+    await cursor;
+
+    expect(positioner).toHaveBeenCalledOnce();
+    expect(cleanup).toHaveBeenCalledOnce();
   });
 });

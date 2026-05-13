@@ -1,6 +1,8 @@
 import type { Cursor } from '../core/Cursor';
 import type { CursorPlugin } from './CursorPlugin';
 
+export type PromptPosition = 'cursor' | 'bottom' | 'center' | 'subtitle';
+
 export interface PromptButton {
   label: string;
   onClick?: (() => void) | 'continue';
@@ -9,7 +11,7 @@ export interface PromptButton {
 
 export interface PromptOptions {
   buttons?: PromptButton[];
-  position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
+  position?: PromptPosition;
   render?: (container: HTMLElement, resolve: (value: any) => void) => void;
   waitUntilFinished?: boolean;
 }
@@ -20,8 +22,23 @@ declare module '../core/Cursor' {
   }
 }
 
+export interface PromptPositionerContext {
+  cursor: Cursor;
+  cursorElement: HTMLElement;
+  promptElement: HTMLElement;
+  position: PromptPosition;
+  options?: PromptOptions;
+}
+
+export type PromptPositionerCleanup = () => void;
+
+export type PromptPositioner = (
+  context: PromptPositionerContext,
+) => void | PromptPositionerCleanup | Promise<void | PromptPositionerCleanup>;
+
 export interface PromptPluginOptions {
-  defaultPosition?: 'cursor' | 'bottom' | 'center' | 'subtitle';
+  defaultPosition?: PromptPosition;
+  positioner?: PromptPositioner;
 }
 
 export class PromptPlugin implements CursorPlugin {
@@ -29,6 +46,7 @@ export class PromptPlugin implements CursorPlugin {
   private options: PromptPluginOptions;
   private promptElement: HTMLElement | null = null;
   private moveIntervalId: ReturnType<typeof setInterval> | null = null;
+  private positionCleanup: PromptPositionerCleanup | null = null;
 
   constructor(options: PromptPluginOptions = {}) {
     this.options = {
@@ -52,7 +70,7 @@ export class PromptPlugin implements CursorPlugin {
 
         // Ekrana elementi çiz ve resolve'u bekle
         const promptPromise = new Promise<any>((resolve) => {
-          self.showPrompt(this, message, options, resolve);
+          void self.showPrompt(this, message, options, resolve);
         });
 
         // İkisinden birini sıraya koymak yerine ikisini de aynı anda bekliyoruz
@@ -61,13 +79,15 @@ export class PromptPlugin implements CursorPlugin {
     };
   }
 
-  private showPrompt(
+  private async showPrompt(
     cursor: Cursor,
     message: string,
     options: PromptOptions | undefined,
     resolve: (value: any) => void,
   ) {
     const position = options?.position || this.options.defaultPosition || 'center';
+
+    this.cleanupPosition();
 
     this.promptElement = document.createElement('div');
     this.promptElement.className = `cursor-js-prompt cursor-js-prompt-${position}`;
@@ -92,49 +112,12 @@ export class PromptPlugin implements CursorPlugin {
       lineHeight: '1.4',
     });
 
-    // Positioning & Position-specific styling
-    if (position === 'cursor') {
-      const cursorRect = cursor.cursor.el.getBoundingClientRect();
-      this.promptElement.style.left = `${cursorRect.left + window.scrollX + 30}px`;
-      this.promptElement.style.top = `${cursorRect.top + window.scrollY - 10}px`;
-
-      // Track cursor position
-      this.moveIntervalId = setInterval(() => {
-        if (this.promptElement && cursor.cursor && cursor.cursor.el) {
-          const rect = cursor.cursor.el.getBoundingClientRect();
-          this.promptElement.style.left = `${rect.left + window.scrollX + 30}px`;
-          this.promptElement.style.top = `${rect.top + window.scrollY - 10}px`;
-        }
-      }, 16);
-    } else if (position === 'bottom') {
-      this.promptElement.style.position = 'fixed';
-      this.promptElement.style.bottom = '20px';
-      this.promptElement.style.left = '50%';
-      this.promptElement.style.transform = 'translateX(-50%)';
-    } else if (position === 'center') {
-      this.promptElement.style.position = 'fixed';
-      this.promptElement.style.top = '50%';
-      this.promptElement.style.left = '50%';
-      this.promptElement.style.transform = 'translate(-50%, -50%)';
-    } else if (position === 'subtitle') {
-      Object.assign(this.promptElement.style, {
-        position: 'fixed',
-        bottom: '40px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        maxWidth: '80%',
-      });
-    }
-
     const cleanup = (value: any) => {
       if (this.promptElement) {
         this.promptElement.remove();
         this.promptElement = null;
       }
-      if (this.moveIntervalId) {
-        clearInterval(this.moveIntervalId);
-        this.moveIntervalId = null;
-      }
+      this.cleanupPosition();
       resolve(value);
     };
 
@@ -181,8 +164,97 @@ export class PromptPlugin implements CursorPlugin {
     }
 
     document.body.appendChild(this.promptElement);
+    this.positionCleanup = await this.positionPrompt(cursor, this.promptElement, position, options);
+
+    if (position === 'cursor' && !this.options.positioner) {
+      this.moveIntervalId = setInterval(() => {
+        if (this.promptElement && cursor.cursor && cursor.cursor.el) {
+          this.positionCursorPrompt(cursor, this.promptElement);
+        }
+      }, 16);
+    }
+
     requestAnimationFrame(() => {
       if (this.promptElement) this.promptElement.style.opacity = '1';
     });
+  }
+
+  onDestroy() {
+    this.cleanupPosition();
+    this.promptElement?.remove();
+    this.promptElement = null;
+  }
+
+  private async positionPrompt(
+    cursor: Cursor,
+    promptElement: HTMLElement,
+    position: PromptPosition,
+    options?: PromptOptions,
+  ): Promise<PromptPositionerCleanup | null> {
+    if (this.options.positioner) {
+      const cleanup = await this.options.positioner({
+        cursor,
+        cursorElement: cursor.cursor.el,
+        promptElement,
+        position,
+        options,
+      });
+
+      return cleanup || null;
+    }
+
+    if (position === 'cursor') {
+      this.positionCursorPrompt(cursor, promptElement);
+    } else if (position === 'bottom') {
+      promptElement.style.position = 'fixed';
+      promptElement.style.bottom = '20px';
+      promptElement.style.left = '50%';
+      promptElement.style.transform = 'translateX(-50%)';
+    } else if (position === 'center') {
+      promptElement.style.position = 'fixed';
+      promptElement.style.top = '50%';
+      promptElement.style.left = '50%';
+      promptElement.style.transform = 'translate(-50%, -50%)';
+    } else if (position === 'subtitle') {
+      Object.assign(promptElement.style, {
+        position: 'fixed',
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: '80%',
+      });
+    }
+
+    return null;
+  }
+
+  private positionCursorPrompt(cursor: Cursor, promptElement: HTMLElement) {
+    const cursorRect = cursor.cursor.el.getBoundingClientRect();
+    const promptRect = promptElement.getBoundingClientRect();
+    const x = cursorRect.left + window.scrollX + 30;
+    const y = cursorRect.top + window.scrollY - 10;
+    const padding = 8;
+    const maxX = window.scrollX + window.innerWidth - promptRect.width - padding;
+    const maxY = window.scrollY + window.innerHeight - promptRect.height - padding;
+    const minX = window.scrollX + padding;
+    const minY = window.scrollY + padding;
+
+    promptElement.style.left = `${this.clamp(x, minX, maxX)}px`;
+    promptElement.style.top = `${this.clamp(y, minY, maxY)}px`;
+  }
+
+  private clamp(value: number, min: number, max: number) {
+    if (max < min) return min;
+    return Math.min(Math.max(value, min), max);
+  }
+
+  private cleanupPosition() {
+    if (this.moveIntervalId) {
+      clearInterval(this.moveIntervalId);
+      this.moveIntervalId = null;
+    }
+
+    this.positionCleanup?.();
+    this.positionCleanup = null;
   }
 }

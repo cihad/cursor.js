@@ -1,10 +1,12 @@
 import type { Cursor } from '../core/Cursor';
 import type { CursorPlugin } from './CursorPlugin';
 
+export type SayBubblePosition = 'cursor' | 'bottom' | 'center' | 'subtitle';
+
 export interface SayOptions {
   duration?: number;
   requireClick?: boolean;
-  position?: 'cursor' | 'bottom' | 'center' | 'subtitle';
+  position?: SayBubblePosition;
   speak?: boolean;
   /** Wait for the bubble to disappear before continuing the sequence. Default: false */
   waitUntilFinished?: boolean;
@@ -16,9 +18,24 @@ declare module '../core/Cursor' {
   }
 }
 
+export interface SayPositionerContext {
+  cursor: Cursor;
+  cursorElement: HTMLElement;
+  bubbleElement: HTMLElement;
+  position: SayBubblePosition;
+  options?: SayOptions;
+}
+
+export type SayPositionerCleanup = () => void;
+
+export type SayPositioner = (
+  context: SayPositionerContext,
+) => void | SayPositionerCleanup | Promise<void | SayPositionerCleanup>;
+
 export interface SayPluginOptions {
   autoSpeak?: boolean;
-  defaultPosition?: 'cursor' | 'bottom' | 'center' | 'subtitle';
+  defaultPosition?: SayBubblePosition;
+  positioner?: SayPositioner;
 }
 
 export class SayPlugin implements CursorPlugin {
@@ -28,6 +45,7 @@ export class SayPlugin implements CursorPlugin {
   private options: SayPluginOptions;
   private bubbleElement: HTMLElement | null = null;
   private moveIntervalId: ReturnType<typeof setInterval> | null = null;
+  private positionCleanup: SayPositionerCleanup | null = null;
 
   constructor(options: SayPluginOptions = {}) {
     this.options = {
@@ -50,6 +68,8 @@ export class SayPlugin implements CursorPlugin {
 
   private async showBubble(cursor: Cursor, text: string, options?: SayOptions) {
     const position = options?.position || this.options.defaultPosition || 'cursor';
+
+    this.cleanupPosition();
 
     this.bubbleElement = document.createElement('div');
     this.bubbleElement.className = `cursor-js-speech-bubble cursor-js-speech-bubble-${position}`;
@@ -99,26 +119,7 @@ export class SayPlugin implements CursorPlugin {
 
     document.body.appendChild(this.bubbleElement);
 
-    // Position the bubble (for cursor mode, use absolute positioning)
-    if (position === 'cursor') {
-      const cursorRect = cursor.cursor.el.getBoundingClientRect();
-      const x = cursorRect.left + window.scrollX + 30;
-      const y = cursorRect.top + window.scrollY - 10;
-      this.bubbleElement.style.left = `${x}px`;
-      this.bubbleElement.style.top = `${y}px`;
-    } else if (position === 'bottom') {
-      this.bubbleElement.style.position = 'fixed';
-      this.bubbleElement.style.bottom = '20px';
-      this.bubbleElement.style.left = '50%';
-      this.bubbleElement.style.transform = 'translateX(-50%)';
-    } else if (position === 'center') {
-      this.bubbleElement.style.position = 'fixed';
-      this.bubbleElement.style.top = '50%';
-      this.bubbleElement.style.left = '50%';
-      this.bubbleElement.style.transform = 'translate(-50%, -50%)';
-    } else if (position === 'subtitle') {
-      this.bubbleElement.style.transform = 'translateX(-50%)';
-    }
+    this.positionCleanup = await this.positionBubble(cursor, this.bubbleElement, position, options);
 
     // Fade in
     requestAnimationFrame(() => {
@@ -132,14 +133,10 @@ export class SayPlugin implements CursorPlugin {
     await cursor.emitAsync('speech_requested', text, options);
 
     // Track ghost cursor position if in cursor mode
-    if (position === 'cursor') {
+    if (position === 'cursor' && !this.options.positioner) {
       this.moveIntervalId = setInterval(() => {
         if (this.bubbleElement && cursor.cursor && cursor.cursor.el) {
-          const cursorRect = cursor.cursor.el.getBoundingClientRect();
-          const x = cursorRect.left + window.scrollX + 30;
-          const y = cursorRect.top + window.scrollY - 10;
-          this.bubbleElement.style.left = `${x}px`;
-          this.bubbleElement.style.top = `${y}px`;
+          this.positionCursorBubble(cursor, this.bubbleElement);
         }
       }, 16); // ~60fps
     }
@@ -159,11 +156,7 @@ export class SayPlugin implements CursorPlugin {
         this.bubbleElement = null;
       }
 
-      // Clear interval if in cursor mode
-      if (position === 'cursor' && this.moveIntervalId) {
-        clearInterval(this.moveIntervalId);
-        this.moveIntervalId = null;
-      }
+      this.cleanupPosition();
 
       // Trigger onAfterSay hook
       this.onAfterSay?.(text);
@@ -175,5 +168,78 @@ export class SayPlugin implements CursorPlugin {
       // Fire and forget without holding the promise execution sequence
       finalizeBubble().catch(() => {});
     }
+  }
+
+  onDestroy() {
+    this.cleanupPosition();
+    this.bubbleElement?.remove();
+    this.bubbleElement = null;
+  }
+
+  private async positionBubble(
+    cursor: Cursor,
+    bubbleElement: HTMLElement,
+    position: SayBubblePosition,
+    options?: SayOptions,
+  ): Promise<SayPositionerCleanup | null> {
+    if (this.options.positioner) {
+      const cleanup = await this.options.positioner({
+        cursor,
+        cursorElement: cursor.cursor.el,
+        bubbleElement,
+        position,
+        options,
+      });
+
+      return cleanup || null;
+    }
+
+    if (position === 'cursor') {
+      this.positionCursorBubble(cursor, bubbleElement);
+    } else if (position === 'bottom') {
+      bubbleElement.style.position = 'fixed';
+      bubbleElement.style.bottom = '20px';
+      bubbleElement.style.left = '50%';
+      bubbleElement.style.transform = 'translateX(-50%)';
+    } else if (position === 'center') {
+      bubbleElement.style.position = 'fixed';
+      bubbleElement.style.top = '50%';
+      bubbleElement.style.left = '50%';
+      bubbleElement.style.transform = 'translate(-50%, -50%)';
+    } else if (position === 'subtitle') {
+      bubbleElement.style.transform = 'translateX(-50%)';
+    }
+
+    return null;
+  }
+
+  private positionCursorBubble(cursor: Cursor, bubbleElement: HTMLElement) {
+    const cursorRect = cursor.cursor.el.getBoundingClientRect();
+    const bubbleRect = bubbleElement.getBoundingClientRect();
+    const x = cursorRect.left + window.scrollX + 30;
+    const y = cursorRect.top + window.scrollY - 10;
+    const padding = 8;
+    const maxX = window.scrollX + window.innerWidth - bubbleRect.width - padding;
+    const maxY = window.scrollY + window.innerHeight - bubbleRect.height - padding;
+    const minX = window.scrollX + padding;
+    const minY = window.scrollY + padding;
+
+    bubbleElement.style.left = `${this.clamp(x, minX, maxX)}px`;
+    bubbleElement.style.top = `${this.clamp(y, minY, maxY)}px`;
+  }
+
+  private clamp(value: number, min: number, max: number) {
+    if (max < min) return min;
+    return Math.min(Math.max(value, min), max);
+  }
+
+  private cleanupPosition() {
+    if (this.moveIntervalId) {
+      clearInterval(this.moveIntervalId);
+      this.moveIntervalId = null;
+    }
+
+    this.positionCleanup?.();
+    this.positionCleanup = null;
   }
 }

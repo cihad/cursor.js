@@ -772,6 +772,10 @@ c.move('#btn1')
             >
               cursor.js
             </h1>
+            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+              Open source cursor automation for polished product demos and guided UX flows.
+              Human-like motion, programmable by design.
+            </p>
             <div className="h-14 mt-4 w-full flex justify-center">
               <FloatingPlayer
                 isFixed={demoState === 'running' || demoState === 'paused'}

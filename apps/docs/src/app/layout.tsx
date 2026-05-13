@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Analytics } from '@vercel/analytics/next';
+import { SiteFooter } from '@/components/SiteFooter';
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
@@ -42,11 +43,7 @@ export default function RootLayout({
         <RootProvider>
           <div className="flex-1 flex flex-col min-h-screen">
             <main className="flex-1">{children}</main>
-            <footer className="w-full border-t py-6 mt-auto">
-              <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                <p>&copy; {new Date().getFullYear()} cursor.js. All rights reserved.</p>
-              </div>
-            </footer>
+            <SiteFooter />
           </div>
         </RootProvider>
         <Analytics />

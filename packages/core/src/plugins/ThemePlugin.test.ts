@@ -65,6 +65,21 @@ describe('ThemePlugin', () => {
     c.destroy();
   });
 
+  it('falls back to default theme slots when only some cursors are overridden', async () => {
+    const themePlugin = new ThemePlugin({
+      default: { html: '<svg id="default-svg"></svg>' },
+    });
+    const c = new Cursor();
+    c.use(themePlugin);
+
+    await c.setState({ theme: { cursor: 'pointer' } });
+
+    const wrapper = c.cursor.el.querySelector('.cursor-theme-wrapper') as HTMLElement;
+    expect(wrapper.innerHTML).toContain('--cursor-primary');
+
+    c.destroy();
+  });
+
   it('auto detects text inputs via elementFromPoint on move', async () => {
     const themePlugin = new ThemePlugin({
       default: { html: '<svg id="default-svg"></svg>' },
@@ -86,5 +101,20 @@ describe('ThemePlugin', () => {
     expect(wrapper.innerHTML).toContain('text-svg');
 
     c.destroy();
+  });
+
+  it('exposes configurable built-in cursor factories', () => {
+    const defaultCursor = ThemePlugin.cursors.default({
+      colors: { primary: '#ff0000', outline: '#0000ff' },
+    });
+    const wrapper = document.createElement('div');
+
+    expect(defaultCursor.html).toContain('--cursor-primary');
+    expect(defaultCursor.html).toContain('--cursor-outline');
+
+    defaultCursor.onStateChange?.(wrapper, {});
+
+    expect(wrapper.style.getPropertyValue('--cursor-primary')).toBe('#ff0000');
+    expect(wrapper.style.getPropertyValue('--cursor-outline')).toBe('#0000ff');
   });
 });

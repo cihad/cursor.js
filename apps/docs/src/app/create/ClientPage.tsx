@@ -42,6 +42,7 @@ import {
   createFloatingSayPositioner,
   createFloatingPromptPositioner,
 } from '@cursor.js/pro';
+import { ThemeCursorPicker } from '@/components/app/theme-cursor-picker';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import {
   Dialog,
@@ -55,6 +56,15 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import {
+  buildThemePackFromSelection,
+  getThemeCursorImports,
+  getThemePluginCode,
+  initialThemeCursorSelection,
+  initialThemePresetSelection,
+  type ThemeCursorPresetSelection,
+  type ThemeCursorSelection,
+} from '@/lib/theme-cursors';
 
 // Settings type and reducer from home page
 type SettingsState = {
@@ -89,6 +99,10 @@ type SettingsState = {
   geminiTtsConfig: { speaker: string; style: string; model: string; language: string };
   outlineConfig: { resolution: number };
   indicatorConfig: { color: string; size: number };
+  themeConfig: {
+    cursorSelection: ThemeCursorSelection;
+    presetSelection: ThemeCursorPresetSelection;
+  };
 };
 
 type SettingsAction =
@@ -125,7 +139,9 @@ type SettingsAction =
       key: keyof SettingsState['geminiTtsConfig'];
       value: string;
     }
-  | { type: 'UPDATE_OUTLINE_CONFIG'; key: keyof SettingsState['outlineConfig']; value: number };
+  | { type: 'UPDATE_OUTLINE_CONFIG'; key: keyof SettingsState['outlineConfig']; value: number }
+  | { type: 'UPDATE_THEME_CURSOR'; slot: keyof ThemeCursorSelection; value: string }
+  | { type: 'UPDATE_THEME_PRESET'; slot: keyof ThemeCursorPresetSelection; value: string };
 
 const initialSettings: SettingsState = {
   coreConfig: { humanize: true, speed: 0.7, size: 1 },
@@ -164,6 +180,10 @@ const initialSettings: SettingsState = {
   },
   outlineConfig: { resolution: 2 },
   indicatorConfig: { color: '#000000', size: 12 },
+  themeConfig: {
+    cursorSelection: initialThemeCursorSelection,
+    presetSelection: initialThemePresetSelection,
+  },
 };
 
 function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
@@ -194,6 +214,28 @@ function settingsReducer(state: SettingsState, action: SettingsAction): Settings
       };
     case 'UPDATE_OUTLINE_CONFIG':
       return { ...state, outlineConfig: { ...state.outlineConfig, [action.key]: action.value } };
+    case 'UPDATE_THEME_CURSOR':
+      return {
+        ...state,
+        themeConfig: {
+          ...state.themeConfig,
+          cursorSelection: {
+            ...state.themeConfig.cursorSelection,
+            [action.slot]: action.value,
+          },
+        },
+      };
+    case 'UPDATE_THEME_PRESET':
+      return {
+        ...state,
+        themeConfig: {
+          ...state.themeConfig,
+          presetSelection: {
+            ...state.themeConfig.presetSelection,
+            [action.slot]: action.value,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -284,6 +326,7 @@ export function ClientPage() {
 
     const activeCore: string[] = [];
     const activePro: string[] = [];
+    const themeCursorImports = getThemeCursorImports(settings.themeConfig.cursorSelection);
 
     // Core
     if (settings.plugins.theme) activeCore.push('ThemePlugin');
@@ -311,6 +354,11 @@ export function ClientPage() {
     if (proImports.length > 0) {
       importLines.push(`import { ${proImports.join(', ')} } from '@cursor.js/pro';`);
     }
+    if (settings.plugins.theme && themeCursorImports.length > 0) {
+      importLines.push(
+        `import { ${themeCursorImports.join(', ')} } from '@cursor.js/pro/cursors';`,
+      );
+    }
 
     const coreDiff: Record<string, any> = {};
     if (settings.coreConfig.humanize !== initialSettings.coreConfig.humanize)
@@ -336,7 +384,9 @@ export function ClientPage() {
       return Object.keys(diff).length > 0 ? `(${JSON.stringify(diff)})` : '()';
     };
 
-    if (settings.plugins.theme) initLines.push(`cursor.use(new ThemePlugin());`);
+    if (settings.plugins.theme) {
+      initLines.push(`cursor.use(${getThemePluginCode(settings.themeConfig.cursorSelection, settings.themeConfig.presetSelection)});`);
+    }
     if (settings.plugins.indicator)
       initLines.push(`cursor.use(new IndicatorPlugin${getPluginDiff('indicatorConfig')});`);
     if (settings.plugins.ripple)
@@ -366,10 +416,7 @@ export function ClientPage() {
       initLines.push(`cursor.use(new OutlinePlugin${getPluginDiff('outlineConfig')});`);
     if (settings.plugins.geminiTts) {
       const diffStr = getPluginDiff('geminiTtsConfig');
-      const paramStr =
-        diffStr === '()'
-          ? '({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY })'
-          : `({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY, ...${diffStr.slice(1, -1)} })`;
+      const paramStr = diffStr === '()' ? '()' : diffStr;
       initLines.push(`cursor.use(new GeminiTTSPlugin${paramStr});`);
     }
 
@@ -390,7 +437,16 @@ export function ClientPage() {
 
     actorRef.current = cursor;
 
-    if (settings.plugins.theme) cursor.use(new ThemePlugin());
+    if (settings.plugins.theme) {
+      cursor.use(
+        new ThemePlugin(
+          buildThemePackFromSelection(
+            settings.themeConfig.cursorSelection,
+            settings.themeConfig.presetSelection,
+          ),
+        ),
+      );
+    }
     if (settings.plugins.indicator) cursor.use(new IndicatorPlugin(settings.indicatorConfig));
     if (settings.plugins.sound) cursor.use(new SoundPlugin(settings.soundConfig));
     if (settings.plugins.logging) cursor.use(new LoggingPlugin());
@@ -405,13 +461,8 @@ export function ClientPage() {
     } else if (settings.plugins.prompt) cursor.use(new PromptPlugin());
     if (settings.plugins.speech) cursor.use(new SpeechPlugin(settings.speechConfig));
     if (settings.plugins.outline) cursor.use(new OutlinePlugin(settings.outlineConfig));
-    if (settings.plugins.geminiTts && process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-      cursor.use(
-        new GeminiTTSPlugin({
-          apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-          ...settings.geminiTtsConfig,
-        }),
-      );
+    if (settings.plugins.geminiTts) {
+      cursor.use(new GeminiTTSPlugin(settings.geminiTtsConfig));
     }
 
     cursor
@@ -1105,7 +1156,16 @@ export function ClientPage() {
             <div
               className={`space-y-6 ${!settings.plugins.theme ? 'opacity-50 pointer-events-none' : ''}`}
             >
-              <div className="text-muted-foreground text-sm">No extra configuration for Theme.</div>
+              <ThemeCursorPicker
+                selection={settings.themeConfig.cursorSelection}
+                presets={settings.themeConfig.presetSelection}
+                onSelectCursor={(slot, value) =>
+                  dispatch({ type: 'UPDATE_THEME_CURSOR', slot, value })
+                }
+                onSelectPreset={(slot, value) =>
+                  dispatch({ type: 'UPDATE_THEME_PRESET', slot, value })
+                }
+              />
             </div>
           )}
           {activeCategory === 'indicator' && (

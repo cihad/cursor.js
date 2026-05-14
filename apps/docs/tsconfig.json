@@ -28,14 +28,6 @@
       ],
       "collections/*": [
         "./.source/*"
-      ],
-      "@cursor.js/pro*": [
-        "../../packages/pro/src/index*",
-        "./src/lib/pro-mock.ts"
-      ],
-      "@cursor.js/pro/*": [
-        "../../packages/pro/src/*",
-        "./src/lib/pro-mock.ts"
       ]
     }
   },

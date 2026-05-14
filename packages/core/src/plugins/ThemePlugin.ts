@@ -99,6 +99,18 @@ export const defaultTheme: ThemePack = {
   text: themePluginCursors.text(),
 };
 
+function mergeThemePack(themePack: Partial<ThemePack>): ThemePack {
+  const merged: ThemePack = { ...defaultTheme };
+
+  for (const [key, value] of Object.entries(themePack)) {
+    if (value) {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+}
+
 export class ThemePlugin implements CursorPlugin {
   static cursors = themePluginCursors;
   public name = 'ThemePlugin';
@@ -110,7 +122,7 @@ export class ThemePlugin implements CursorPlugin {
   private lastElement: Element | null = null;
 
   constructor(themePack: Partial<ThemePack> = defaultTheme, options: ThemePluginOptions = {}) {
-    this.themePack = { ...defaultTheme, ...themePack };
+    this.themePack = mergeThemePack(themePack);
     this.options = { auto: true, ...options };
   }
 

@@ -39,6 +39,9 @@ importers:
       '@cursor.js/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@cursor.js/pro':
+        specifier: workspace:*
+        version: link:../../packages/pro
       '@google/genai':
         specifier: ^1.51.0
         version: 1.51.0(@modelcontextprotocol/sdk@1.29.0(zod@4.3.6))
@@ -197,7 +200,7 @@ importers:
   packages/pro:
     dependencies:
       '@cursor.js/core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
       '@floating-ui/dom':
         specifier: ^1.7.6
@@ -9488,7 +9491,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.4(@types/node@20.19.39)(@vitest/coverage-v8@4.1.4)(jsdom@29.0.2(@noble/hashes@1.8.0))(msw@2.13.3(@types/node@20.19.39)(typescript@6.0.3))(vite@8.0.10(@types/node@20.19.39)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0))
+      vitest: 4.1.4(@types/node@20.19.39)(@vitest/coverage-v8@4.1.4)(jsdom@29.0.2(@noble/hashes@1.8.0))(msw@2.13.3(@types/node@20.19.39)(typescript@6.0.3))(vite@8.0.8(@types/node@20.19.39)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0))
 
   '@vitest/expect@4.1.4':
     dependencies:

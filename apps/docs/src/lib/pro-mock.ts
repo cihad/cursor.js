@@ -98,3 +98,50 @@ export const OutlinePlugin = class {
   constructor(args?: any) {}
   install() {}
 };
+
+const mockCursorFactory = () => ({
+  html: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"></svg>',
+  hotspot: 'top-left' as const,
+});
+
+export const proCursorCatalog = {
+  default: [
+    {
+      exportName: 'bibataDark',
+      label: 'Mock Cursor',
+      slot: 'default' as const,
+      presets: [],
+      isConfigurable: false,
+      defaultColors: {},
+      hotspot: 'top-left' as const,
+      factory: mockCursorFactory,
+      previewHtml: mockCursorFactory().html,
+    },
+  ],
+  pointer: [
+    {
+      exportName: 'bibataPointer',
+      label: 'Mock Pointer',
+      slot: 'pointer' as const,
+      presets: [],
+      isConfigurable: false,
+      defaultColors: {},
+      hotspot: 'top-left' as const,
+      factory: mockCursorFactory,
+      previewHtml: mockCursorFactory().html,
+    },
+  ],
+  text: [
+    {
+      exportName: 'bibataText',
+      label: 'Mock Text',
+      slot: 'text' as const,
+      presets: [],
+      isConfigurable: false,
+      defaultColors: {},
+      hotspot: 'top-left' as const,
+      factory: mockCursorFactory,
+      previewHtml: mockCursorFactory().html,
+    },
+  ],
+};

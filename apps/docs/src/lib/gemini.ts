@@ -4,6 +4,57 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+interface GeminiInlineData {
+  data?: string;
+  mimeType?: string;
+}
+
+interface GeminiPart {
+  inlineData?: GeminiInlineData;
+}
+
+interface GeminiCandidate {
+  finishReason?: string;
+  content?: {
+    parts?: GeminiPart[];
+  };
+}
+
+interface GeminiGenerateContentResponse {
+  candidates?: GeminiCandidate[];
+}
+
+interface GeminiGenerateContentRequest {
+  model: string;
+  contents: string;
+  config: {
+    responseModalities: ['AUDIO'];
+    speechConfig: {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: string;
+        };
+      };
+    };
+    systemInstruction?: string;
+  };
+}
+
+function buildTtsContents(text: string, style: string): string {
+  if (!style) {
+    return text;
+  }
+
+  return `Speaking style instructions:\n${style}\n\nText to speak:\n${text}`;
+}
+
+function isUnsupportedSystemInstructionError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes('Developer instruction is not enabled for this model')
+  );
+}
+
 function pcmToWav(
   pcmData: Buffer,
   sampleRate: number,
@@ -28,6 +79,20 @@ function pcmToWav(
   return Buffer.concat([wavHeader, pcmData]);
 }
 
+function findAudioPart(response: GeminiGenerateContentResponse): GeminiPart | undefined {
+  const candidates = response.candidates ?? [];
+
+  for (const candidate of candidates) {
+    const parts = candidate.content?.parts ?? [];
+    const audioPart = parts.find((part) => part.inlineData?.data);
+    if (audioPart) {
+      return audioPart;
+    }
+  }
+
+  return undefined;
+}
+
 export async function generateGeminiTTS(
   text: string,
   speaker: string,
@@ -44,9 +109,8 @@ export async function generateGeminiTTS(
     voiceName = 'Aoede';
   }
 
-  // Set up generate content request
-  const requestPayload: any = {
-    model: model,
+  const requestPayload: GeminiGenerateContentRequest = {
+    model,
     contents: text,
     config: {
       responseModalities: ['AUDIO'],
@@ -61,23 +125,45 @@ export async function generateGeminiTTS(
   };
 
   if (style) {
-    requestPayload.systemInstruction = style;
+    requestPayload.config.systemInstruction = style;
   }
 
   try {
-    const response = await ai.models.generateContent(requestPayload);
+    let response: GeminiGenerateContentResponse;
 
-    const part = response.candidates?.[0]?.content?.parts?.[0];
-    if (response.candidates?.[0]?.finishReason === 'OTHER' || !part?.inlineData) {
-      throw new Error(`Gemini rejected the text. finishReason OTHER`);
+    try {
+      response = (await ai.models.generateContent(requestPayload)) as GeminiGenerateContentResponse;
+    } catch (error) {
+      if (!isUnsupportedSystemInstructionError(error)) {
+        throw error;
+      }
+
+      const fallbackPayload: GeminiGenerateContentRequest = {
+        model,
+        contents: buildTtsContents(text, style),
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName,
+              },
+            },
+          },
+        },
+      };
+
+      response = (await ai.models.generateContent(fallbackPayload)) as GeminiGenerateContentResponse;
+    }
+
+    const finishReason = response.candidates?.[0]?.finishReason;
+    const part = findAudioPart(response);
+    if (!part?.inlineData?.data) {
+      throw new Error(`Gemini did not return audio data. finishReason: ${finishReason ?? 'unknown'}`);
     }
 
     const mimeType = part.inlineData.mimeType || ''; // audio/L16;codec=pcm;rate=24000
     const audioData = part.inlineData.data;
-    if (!audioData) {
-      throw new Error('Failed to extract audio data from Gemini response');
-    }
-
     const pcmBuffer = Buffer.from(audioData, 'base64');
 
     // Parse sample rate if possible, default to 24000

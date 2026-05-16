@@ -82,6 +82,7 @@ import {
   type ThemeCursorPresetSelection,
   type ThemeCursorSelection,
 } from '@/lib/theme-cursors';
+import { normalizePluginToggleState } from '@/lib/plugin-settings';
 
 type SettingsState = {
   coreConfig: {
@@ -196,7 +197,7 @@ const initialSettings: SettingsState = {
     outline: true,
     floatingSay: true,
     floatingPrompt: true,
-    waitForUser: true,
+    waitForUser: false,
     floatingWaitForUser: true,
   },
   rippleConfig: {
@@ -235,7 +236,10 @@ const initialSettings: SettingsState = {
 function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     case 'TOGGLE_PLUGIN':
-      return { ...state, plugins: { ...state.plugins, [action.plugin]: action.enabled } };
+      return {
+        ...state,
+        plugins: normalizePluginToggleState(state.plugins, action.plugin, action.enabled),
+      };
     case 'UPDATE_CORE_CONFIG':
       return { ...state, coreConfig: { ...state.coreConfig, [action.key]: action.value } };
     case 'UPDATE_RIPPLE_CONFIG':
@@ -423,7 +427,7 @@ c.move('#btn1')
       if (!isActive) return;
       const hasSay = Boolean(c.getPlugin('say'));
       const hasPrompt = Boolean(c.getPlugin('prompt'));
-      const hasOutline = Boolean(c.getPlugin('outline'));
+      const hasOutline = () => Boolean(c.getPlugin('outline'));
       const hasWaitForUser = Boolean(c.getPlugin('wait-for-user'));
 
       let sequence = c
@@ -438,14 +442,15 @@ c.move('#btn1')
       }
 
       // Sadece outline aktifse çalıştır
-      const afterOutline = hasOutline
-        ? ((sequence as any).outlineCircle('#hero-title', {
-            duration: 1500,
-            loopCount: 1,
-          }) as Cursor)
-        : sequence;
-
-      afterOutline
+      sequence
+        .if(
+          hasOutline,
+          (ctx) =>
+            ((ctx as any).outlineCircle('#hero-title', {
+              duration: 1500,
+              loopCount: 1,
+            }) as Cursor),
+        )
         .wait(1000)
         .until(
           () => {
@@ -535,7 +540,7 @@ c.move('#btn1')
         )
         .wait(1000)
         .if(
-          () => hasOutline,
+          hasOutline,
           (ctx) =>
             (ctx as any)
               .outlineUnderline('.todo-item-2', { duration: 1000, loopCount: 2 })

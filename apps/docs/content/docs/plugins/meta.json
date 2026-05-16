@@ -15,6 +15,9 @@
     "trail",
     "particle",
     "outline",
+    "spotlight",
+    "wait-for-user",
+    "floating-wait-for-user",
     "custom-plugins"
   ]
 }

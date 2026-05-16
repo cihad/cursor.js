@@ -24,6 +24,9 @@ import {
   ParticlePlugin,
   GeminiTTSPlugin,
   OutlinePlugin,
+  SpotlightPlugin,
+  WaitForUserPlugin,
+  FloatingWaitForUserPlugin,
   createFloatingSayPositioner,
   createFloatingPromptPositioner,
 } from '@cursor.js/pro';
@@ -101,6 +104,8 @@ type SettingsState = {
     outline: boolean;
     floatingSay: boolean;
     floatingPrompt: boolean;
+    waitForUser: boolean;
+    floatingWaitForUser: boolean;
   };
   rippleConfig: {
     color: string;
@@ -191,6 +196,8 @@ const initialSettings: SettingsState = {
     outline: true,
     floatingSay: true,
     floatingPrompt: true,
+    waitForUser: true,
+    floatingWaitForUser: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -278,7 +285,7 @@ const BEGINNING_CURSOR_SIZE = 3;
 
 export function ClientPage() {
   const [demoState, setDemoState] = useState<'idle' | 'running' | 'paused' | 'done'>('idle');
-  const actorRef = useRef<Cursor | null>(null);
+  const actorRef = useRef<any>(null);
 
   // Form states
   const [email, setEmail] = useState('');
@@ -403,11 +410,21 @@ c.move('#btn1')
       c.use(new OutlinePlugin());
     }
 
+    if (settings.plugins.floatingWaitForUser) {
+      c.use(new SpotlightPlugin());
+      c.use(new FloatingWaitForUserPlugin());
+    } else if (settings.plugins.waitForUser) {
+      c.use(new SpotlightPlugin());
+      c.use(new WaitForUserPlugin());
+    }
+
     // Wrap the repeatable scenario in a function and link recursively
     const buildDemoSequence = () => {
       if (!isActive) return;
-      const hasSay = settings.plugins.floatingSay || settings.plugins.say;
-      const hasPrompt = settings.plugins.floatingPrompt || settings.plugins.prompt;
+      const hasSay = Boolean(c.getPlugin('say'));
+      const hasPrompt = Boolean(c.getPlugin('prompt'));
+      const hasOutline = Boolean(c.getPlugin('outline'));
+      const hasWaitForUser = Boolean(c.getPlugin('wait-for-user'));
 
       let sequence = c
         .do(() => c.pause()) // Sequence natural pause point
@@ -421,7 +438,7 @@ c.move('#btn1')
       }
 
       // Sadece outline aktifse çalıştır
-      const afterOutline = settings.plugins.outline
+      const afterOutline = hasOutline
         ? ((sequence as any).outlineCircle('#hero-title', {
             duration: 1500,
             loopCount: 1,
@@ -442,10 +459,12 @@ c.move('#btn1')
             hasSay &&
             document.querySelector<HTMLInputElement>('#demo-email')?.value !== 'hello@cursor.js',
           (ctx) =>
-            ctx.hover('#demo-email').say('Let me fill this out for you!', {
-              duration: 2000,
-              position: 'subtitle',
-            })
+            ctx
+              .hover('#demo-email')
+              .say('Let me fill this out for you!', {
+                duration: 2000,
+                position: 'subtitle',
+              })
               .do(() => isActive && setEmail(''))
               .type('#demo-email', 'hello@cursor.js'),
         )
@@ -454,7 +473,10 @@ c.move('#btn1')
             !hasSay &&
             document.querySelector<HTMLInputElement>('#demo-email')?.value !== 'hello@cursor.js',
           (ctx) =>
-            ctx.hover('#demo-email').do(() => isActive && setEmail('')).type('#demo-email', 'hello@cursor.js'),
+            ctx
+              .hover('#demo-email')
+              .do(() => isActive && setEmail(''))
+              .type('#demo-email', 'hello@cursor.js'),
         )
         .if(
           () => document.querySelector<HTMLInputElement>('#demo-password')?.value !== 'secret',
@@ -467,7 +489,10 @@ c.move('#btn1')
               .wait(600),
         )
         .hover('#demo-submit')
-        .if(() => hasSay, (ctx) => ctx.say('And click submit!', { duration: 1500 }))
+        .if(
+          () => hasSay,
+          (ctx) => ctx.say('And click submit!', { duration: 1500 }),
+        )
         .wait(300)
         .click('#demo-submit')
         .wait(1000)
@@ -504,10 +529,13 @@ c.move('#btn1')
         .click('#todo-check-1')
         .wait(1000)
         .hover('.todo-item-2')
-        .if(() => hasSay, (ctx) => ctx.say("Let's delete this one.", { duration: 1500, position: 'subtitle' }))
+        .if(
+          () => hasSay,
+          (ctx) => ctx.say("Let's delete this one.", { duration: 1500, position: 'subtitle' }),
+        )
         .wait(1000)
         .if(
-          () => !!settings.plugins.outline,
+          () => hasOutline,
           (ctx) =>
             (ctx as any)
               .outlineUnderline('.todo-item-2', { duration: 1000, loopCount: 2 })
@@ -518,16 +546,30 @@ c.move('#btn1')
         .click('#todo-delete-2')
         .wait(1000)
         .if(
-          () => hasPrompt,
+          () => hasPrompt && !hasWaitForUser,
           (ctx) =>
             ctx.prompt('Would you really like to delete this item?', {
               buttons: [{ label: 'Yes, click delete!', onClick: 'continue', type: 'danger' }],
             }),
         )
-        .wait(1000)
-        .hover('#todo-confirm-delete')
-        .wait(300)
-        .click('#todo-confirm-delete')
+        .if(
+          () => hasWaitForUser,
+          (ctx) =>
+            (ctx as any).waitForUser({
+              target: '#todo-confirm-delete',
+              event: 'click',
+              message: 'Your turn: confirm the deletion to continue.',
+              spotlight: true,
+              backdrop: true,
+              pauseEffects: true,
+              speak: true,
+              resumeLabel: 'Skip manually',
+            }),
+        )
+        .if(
+          () => !hasWaitForUser,
+          (ctx) => ctx.hover('#todo-confirm-delete').wait(300).click('#todo-confirm-delete'),
+        )
         .wait(1000)
         .hover('#cursor-beginning')
         .setState({ size: BEGINNING_CURSOR_SIZE })
@@ -698,6 +740,21 @@ c.move('#btn1')
       c.use(new OutlinePlugin());
     } else {
       c.removePlugin('outline');
+    }
+
+    if (plugins.floatingWaitForUser) {
+      c.removePlugin('spotlight');
+      c.use(new SpotlightPlugin());
+      c.removePlugin('wait-for-user');
+      c.use(new FloatingWaitForUserPlugin());
+    } else if (plugins.waitForUser) {
+      c.removePlugin('spotlight');
+      c.use(new SpotlightPlugin());
+      c.removePlugin('wait-for-user');
+      c.use(new WaitForUserPlugin());
+    } else {
+      c.removePlugin('spotlight');
+      c.removePlugin('wait-for-user');
     }
   }, [settings]);
 
@@ -1705,6 +1762,100 @@ c.move('#btn1')
                             <p className="text-xs text-muted-foreground">
                               Provides the same <code>.prompt()</code> action with smarter popup
                               positioning.
+                            </p>
+                          </div>
+                        </SettingsAccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="wait-for-user" className="relative">
+                        <SettingsAccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Wait For User
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/wait-for-user"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-wait-for-user"
+                            checked={settings.plugins.waitForUser}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'waitForUser',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Pauses the script, highlights the next target, and lets a real user
+                              finish the step before the demo resumes.
+                            </p>
+                          </div>
+                        </SettingsAccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="floating-wait-for-user" className="relative">
+                        <SettingsAccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Floating Wait For User
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/floating-wait-for-user"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-floating-wait-for-user"
+                            checked={settings.plugins.floatingWaitForUser}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'floatingWaitForUser',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Keeps the handoff panel near the cursor with Floating UI while still
+                              supporting spotlight focus and voice narration.
                             </p>
                           </div>
                         </SettingsAccordionContent>

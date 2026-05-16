@@ -9,8 +9,11 @@ const PRO_PLUGINS = [
   'geminitts',
   'particle',
   'outline',
+  'spotlight',
   'floating-say',
   'floating-prompt',
+  'wait-for-user',
+  'floating-wait-for-user',
 ];
 
 function patchTree(node: any): any {

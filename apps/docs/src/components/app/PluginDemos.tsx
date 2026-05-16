@@ -9,7 +9,14 @@ import {
   SoundPlugin,
   LoggingPlugin,
 } from '@cursor.js/core';
-import { TrailPlugin, ParticlePlugin, OutlinePlugin } from '@cursor.js/pro';
+import {
+  TrailPlugin,
+  ParticlePlugin,
+  OutlinePlugin,
+  WaitForUserPlugin,
+  SpotlightPlugin,
+  FloatingWaitForUserPlugin,
+} from '@cursor.js/pro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -684,6 +691,273 @@ export function PromptDemo() {
       >
         Center Pos
       </button>
+    </div>
+  );
+}
+
+export function WaitForUserDemo() {
+  const [status, setStatus] = useState<'idle' | 'waiting' | 'confirmed'>('idle');
+
+  useEffect(() => {
+    let isActive = true;
+    const cursor = new Cursor({ speed: 0.75 });
+    cursor.use(new SpotlightPlugin());
+    cursor.use(new WaitForUserPlugin());
+
+    const resetUi = () => {
+      if (!isActive) return;
+      setStatus('idle');
+      const consent = document.querySelector<HTMLInputElement>('#wait-for-user-consent');
+      if (consent) consent.checked = false;
+    };
+
+    const run = async () => {
+      if (!isActive) return;
+
+      resetUi();
+      setStatus('waiting');
+
+      await cursor
+        .hover('#wait-for-user-trigger')
+        .click('#wait-for-user-trigger')
+        .wait(400)
+        .do((c) =>
+          (c as any).waitForUser({
+          target: '#wait-for-user-confirm',
+          event: 'click',
+          message: 'Your turn: accept the handoff and confirm this step.',
+          spotlight: true,
+          backdrop: true,
+          pauseEffects: true,
+          resumeLabel: 'Skip manually',
+          }),
+        );
+
+      if (!isActive) return;
+
+      setStatus('confirmed');
+
+      await cursor.move('#wait-for-user-status').wait(1200);
+
+      if (!isActive) return;
+      setTimeout(() => {
+        if (isActive) {
+          void run();
+        }
+      }, 250);
+    };
+
+    cursor.wait(200).do(() => {
+      void run();
+    });
+
+    return () => {
+      isActive = false;
+      cursor.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
+      <h4 className="text-sm font-semibold mb-2">Wait For User Plugin</h4>
+      <p className="text-xs text-muted-foreground mb-4">
+        Pause the scripted flow, spotlight the target, and let a real person complete the next
+        step before the cursor continues.
+      </p>
+
+      <div className="space-y-3 rounded-xl border bg-slate-50 p-4 dark:bg-slate-900/40">
+        <Button id="wait-for-user-trigger" className="w-full">
+          Start handoff
+        </Button>
+
+        <label className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs">
+          <input id="wait-for-user-consent" type="checkbox" className="size-4" />
+          I reviewed this step and I am ready to continue.
+        </label>
+
+        <Button
+          id="wait-for-user-confirm"
+          variant={status === 'confirmed' ? 'default' : 'outline'}
+          className="w-full"
+        >
+          Confirm and continue
+        </Button>
+
+        <div
+          id="wait-for-user-status"
+          className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+        >
+          {status === 'idle' && 'The cursor will trigger a handoff.'}
+          {status === 'waiting' && 'Waiting for a real user click on the confirm button.'}
+          {status === 'confirmed' && 'Confirmed. The scripted flow resumed successfully.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function FloatingWaitForUserDemo() {
+  const [status, setStatus] = useState<'idle' | 'waiting' | 'confirmed'>('idle');
+
+  useEffect(() => {
+    let isActive = true;
+    const cursor = new Cursor({ speed: 0.75 });
+    cursor.use(new SpotlightPlugin());
+    cursor.use(new FloatingWaitForUserPlugin());
+
+    const resetUi = () => {
+      if (!isActive) return;
+      setStatus('idle');
+      const consent = document.querySelector<HTMLInputElement>('#floating-wait-consent');
+      if (consent) consent.checked = false;
+    };
+
+    const run = async () => {
+      if (!isActive) return;
+
+      resetUi();
+      setStatus('waiting');
+
+      await cursor
+        .hover('#floating-wait-trigger')
+        .click('#floating-wait-trigger')
+        .wait(400)
+        .do((c) =>
+          (c as any).waitForUser({
+            target: '#floating-wait-confirm',
+            event: 'click',
+            message: 'Your turn: review the floating handoff and continue.',
+            position: 'cursor',
+            spotlight: true,
+            backdrop: true,
+            pauseEffects: true,
+            speak: true,
+            waitUntilFinished: false,
+            resumeLabel: 'Skip manually',
+          }),
+        );
+
+      if (!isActive) return;
+
+      setStatus('confirmed');
+
+      await cursor.move('#floating-wait-status').wait(1200);
+
+      if (!isActive) return;
+      setTimeout(() => {
+        if (isActive) {
+          void run();
+        }
+      }, 250);
+    };
+
+    cursor.wait(200).do(() => {
+      void run();
+    });
+
+    return () => {
+      isActive = false;
+      cursor.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
+      <h4 className="text-sm font-semibold mb-2">Floating Wait For User Plugin</h4>
+      <p className="text-xs text-muted-foreground mb-4">
+        Uses Floating UI to keep the handoff panel near the cursor while still supporting
+        spotlight focus and speech/TTS narration.
+      </p>
+
+      <div className="space-y-3 rounded-xl border bg-slate-50 p-4 dark:bg-slate-900/40">
+        <Button id="floating-wait-trigger" className="w-full">
+          Start floating handoff
+        </Button>
+
+        <label className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs">
+          <input id="floating-wait-consent" type="checkbox" className="size-4" />
+          I checked the step and I want the cursor flow to continue.
+        </label>
+
+        <Button
+          id="floating-wait-confirm"
+          variant={status === 'confirmed' ? 'default' : 'outline'}
+          className="w-full"
+        >
+          Continue from floating panel
+        </Button>
+
+        <div
+          id="floating-wait-status"
+          className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+        >
+          {status === 'idle' && 'The cursor will trigger a floating handoff.'}
+          {status === 'waiting' && 'Waiting for a real user click with the floating panel anchored near the cursor.'}
+          {status === 'confirmed' && 'Confirmed. The floating handoff resumed successfully.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SpotlightDemo() {
+  useEffect(() => {
+    let isActive = true;
+    const cursor = new Cursor({ speed: 0.8 });
+    cursor.use(new SpotlightPlugin());
+
+    const run = async () => {
+      if (!isActive) return;
+
+      await cursor
+        .move('#spotlight-card-a')
+        .do((c) => (c as any).spotlight('#spotlight-card-a', { backdrop: true, padding: 14 }))
+        .wait(900)
+        .move('#spotlight-card-b')
+        .do((c) => (c as any).spotlight('#spotlight-card-b', { backdrop: false, padding: 12 }))
+        .wait(900)
+        .do((c) => (c as any).removeSpotlight())
+        .wait(500);
+
+      if (!isActive) return;
+      setTimeout(() => {
+        if (isActive) {
+          void run();
+        }
+      }, 0);
+    };
+
+    cursor.wait(200).do(() => {
+      void run();
+    });
+
+    return () => {
+      isActive = false;
+      cursor.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
+      <h4 className="text-sm font-semibold mb-2">Spotlight Plugin</h4>
+      <p className="text-xs text-muted-foreground mb-4">
+        Highlight the exact element that matters and optionally dim the rest of the interface for
+        guided attention.
+      </p>
+      <div className="grid gap-3">
+        <div id="spotlight-card-a" className="rounded-xl border bg-slate-50 p-4 dark:bg-slate-900/40">
+          <div className="text-sm font-medium">Primary callout</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Uses the dimmed backdrop to isolate the next target.
+          </div>
+        </div>
+        <div id="spotlight-card-b" className="rounded-xl border bg-slate-50 p-4 dark:bg-slate-900/40">
+          <div className="text-sm font-medium">Inline highlight</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Keeps the frame without dimming the rest of the screen.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

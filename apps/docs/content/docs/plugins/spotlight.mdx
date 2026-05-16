@@ -1,0 +1,57 @@
+---
+title: Spotlight Plugin
+description: Highlight one target with an optional dimmed backdrop to guide attention.
+---
+
+The `SpotlightPlugin` is a visual focus layer for Cursor.js Pro. Use it when you want to isolate a target element, dim the rest of the screen, or pair it with narration, prompts, and user handoff flows.
+
+### Demo
+
+<iframe
+  src="/demos/spotlight"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+## Installation
+
+The `SpotlightPlugin` is included in the `@cursor.js/pro` package.
+
+```bash
+npm install @cursor.js/pro @cursor.js/core
+```
+
+## Basic Usage
+
+```typescript
+import { Cursor } from '@cursor.js/core';
+import { SpotlightPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(new SpotlightPlugin());
+
+await cursor
+  .move('#billing-email')
+  .spotlight('#billing-email', { backdrop: true, padding: 14 })
+  .wait(1200)
+  .removeSpotlight();
+```
+
+## Wait For User Integration
+
+`WaitForUserPlugin` delegates its visual highlighting to `SpotlightPlugin`. If you want `waitForUser({ spotlight: true, backdrop: true })` to render a frame and dimmed backdrop, install both plugins:
+
+```typescript
+import { Cursor } from '@cursor.js/core';
+import { SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(new SpotlightPlugin());
+cursor.use(new WaitForUserPlugin());
+```
+
+## Options
+
+<auto-type-table
+  path="../../../../../packages/pro/src/SpotlightPlugin.ts"
+  name="SpotlightOptions"
+/>

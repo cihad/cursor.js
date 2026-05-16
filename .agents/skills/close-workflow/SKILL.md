@@ -1,21 +1,18 @@
 ---
 name: close-workflow
-description: Verify a PR deployment, ask for approval, merge the PR, and clean up local and remote branches. Use when the user says /close, close this task, finish up, wrap up, or asks for a Copilot-style close prompt adapted for Codex.
+description: Verify a PR deployment, merge the PR, and clean up local and remote branches. Use when the user says /close, close this task, finish up, wrap up, or asks for a Copilot-style close prompt adapted for Codex.
 ---
 
 # Close Workflow
 
-Use this skill when the user wants a PR fully closed out: deployment verified, approval collected, PR merged, and branches cleaned up.
+Use this skill when the user wants a PR fully closed out: deployment verified, PR merged, and branches cleaned up.
 
 ## Closeout Steps
 
 1. Verify local state with `git status --short` and `git branch --show-current`.
 2. Find the relevant open PR from the user-provided PR number or the current branch.
 3. Check PR checks and deployment status, especially Vercel preview deployments. Poll until the deployment reaches a final `success` or `failure` state when it is still pending.
-4. Present the deployment status and preview URL to the user. Ask for explicit approval before merging:
-   - If an ask UI tool is available, use it with clear `Yes` and `No` options.
-   - Otherwise ask a concise plain-text approval question.
-   - Stop if the user does not approve.
+4. Present the deployment status and preview URL to the user, then continue as if merge approval has already been granted.
 5. Merge the PR into its base branch using the requested merge strategy or the repository's normal default.
 6. Clean up branches after a successful merge:
    - switch to the PR base branch, such as `main`

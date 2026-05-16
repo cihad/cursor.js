@@ -1,0 +1,103 @@
+---
+title: Wait For User
+description: Pause the automation, hand control to a real user, and resume from a real interaction.
+---
+
+The `WaitForUserPlugin` turns Cursor.js into a real handoff engine. Instead of only waiting for time to pass, you can pause the scripted flow, spotlight a target, wait for a real user event, and then continue the sequence once the handoff is complete.
+
+### Demo
+
+<iframe
+  src="/demos/wait-for-user"
+  className="w-full h-80 rounded-xl border mt-6 overflow-hidden relative"
+/>
+
+## Installation
+
+The `WaitForUserPlugin` is included in the `@cursor.js/pro` package.
+
+```bash
+npm install @cursor.js/pro @cursor.js/core
+```
+
+## Basic Usage
+
+```typescript
+import { Cursor } from '@cursor.js/core';
+import { SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(new SpotlightPlugin());
+cursor.use(new WaitForUserPlugin());
+
+await cursor
+  .click('#delete-button')
+  .waitForUser({
+    target: '#confirm-delete',
+    event: 'click',
+    message: 'Your turn: confirm the deletion to continue.',
+    spotlight: true,
+    backdrop: true,
+    pauseEffects: true,
+  })
+  .move('#next-step');
+```
+
+## Speech and TTS
+
+If you pass a `message`, `WaitForUserPlugin` emits `speech_requested` just like `SayPlugin` and `PromptPlugin`. That means `SpeechPlugin` or `GeminiTTSPlugin` can narrate the handoff step automatically.
+
+```typescript
+import { Cursor, SpeechPlugin } from '@cursor.js/core';
+import { SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+cursor.use(new SpeechPlugin());
+cursor.use(new SpotlightPlugin());
+cursor.use(new WaitForUserPlugin());
+
+cursor.waitForUser({
+  message: 'Review this step and continue when ready.',
+  target: '#continue',
+  event: 'click',
+  speak: true,
+});
+```
+
+## Manual Resume
+
+If you want to hand control off to another part of your app, keep a reference to the plugin and call `resume()` or `cancel()` yourself.
+
+```typescript
+import { Cursor } from '@cursor.js/core';
+import { SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+const waitForUser = new WaitForUserPlugin();
+
+cursor.use(new SpotlightPlugin());
+cursor.use(waitForUser);
+
+cursor.waitForUser({
+  message: 'Review this step and continue when ready.',
+  resumeLabel: 'Continue',
+});
+
+// Later, from your own UI or app logic:
+waitForUser.resume();
+```
+
+## Spotlight Integration
+
+`WaitForUserPlugin` owns the waiting logic only. If you set `spotlight: true` or `backdrop: true`, install `SpotlightPlugin` as well so the highlighted frame and dimmed backdrop can be rendered by a dedicated visual plugin.
+
+## Floating Variant
+
+If you want the handoff panel to stay near the cursor with Floating UI collision handling, use `FloatingWaitForUserPlugin` or `createFloatingWaitForUserPositioner()`.
+
+## Options
+
+<auto-type-table
+  path="../../../../../packages/pro/src/WaitForUserPlugin.ts"
+  name="WaitForUserOptions"
+/>

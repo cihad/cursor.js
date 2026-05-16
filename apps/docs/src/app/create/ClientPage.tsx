@@ -22,6 +22,7 @@ import {
   Info,
   ArrowLeft,
   MessageCircleMore,
+  Hand,
 } from 'lucide-react';
 import {
   Cursor,
@@ -39,6 +40,9 @@ import {
   ParticlePlugin,
   GeminiTTSPlugin,
   OutlinePlugin,
+  SpotlightPlugin,
+  WaitForUserPlugin,
+  FloatingWaitForUserPlugin,
   createFloatingSayPositioner,
   createFloatingPromptPositioner,
 } from '@cursor.js/pro';
@@ -84,6 +88,8 @@ type SettingsState = {
     outline: boolean;
     floatingSay: boolean;
     floatingPrompt: boolean;
+    waitForUser: boolean;
+    floatingWaitForUser: boolean;
   };
   rippleConfig: { color: string; duration: number; size: number };
   trailConfig: { length: number; thickness: number; color: string; fadeDuration: number };
@@ -160,6 +166,8 @@ const initialSettings: SettingsState = {
     outline: true,
     floatingSay: true,
     floatingPrompt: true,
+    waitForUser: false,
+    floatingWaitForUser: true,
   },
   rippleConfig: { color: '#000000', duration: 600, size: 50 },
   trailConfig: { length: 40, thickness: 7, color: '#0099ff', fadeDuration: 500 },
@@ -318,7 +326,7 @@ function SidebarItem({
 export function ClientPage() {
   const [settings, dispatch] = useReducer(settingsReducer, initialSettings);
   const [activeCategory, setActiveCategory] = useState<string>('core');
-  const actorRef = useRef<Cursor | null>(null);
+  const actorRef = useRef<any>(null);
 
   const getInitializationCode = () => {
     const coreImports: string[] = ['Cursor'];
@@ -346,6 +354,11 @@ export function ClientPage() {
     if (settings.plugins.outline) activePro.push('OutlinePlugin');
     if (settings.plugins.floatingSay) activePro.push('createFloatingSayPositioner');
     if (settings.plugins.floatingPrompt) activePro.push('createFloatingPromptPositioner');
+    if (settings.plugins.floatingWaitForUser) {
+      activePro.push('SpotlightPlugin', 'FloatingWaitForUserPlugin');
+    } else if (settings.plugins.waitForUser) {
+      activePro.push('SpotlightPlugin', 'WaitForUserPlugin');
+    }
 
     coreImports.push(...activeCore);
     proImports.push(...activePro);
@@ -419,6 +432,13 @@ export function ClientPage() {
       const paramStr = diffStr === '()' ? '()' : diffStr;
       initLines.push(`cursor.use(new GeminiTTSPlugin${paramStr});`);
     }
+    if (settings.plugins.floatingWaitForUser) {
+      initLines.push(`cursor.use(new SpotlightPlugin());`);
+      initLines.push(`cursor.use(new FloatingWaitForUserPlugin());`);
+    } else if (settings.plugins.waitForUser) {
+      initLines.push(`cursor.use(new SpotlightPlugin());`);
+      initLines.push(`cursor.use(new WaitForUserPlugin());`);
+    }
 
     return importLines.join('\n') + initLines.join('\n');
   };
@@ -464,16 +484,36 @@ export function ClientPage() {
     if (settings.plugins.geminiTts) {
       cursor.use(new GeminiTTSPlugin(settings.geminiTtsConfig));
     }
+    if (settings.plugins.floatingWaitForUser) {
+      cursor.use(new SpotlightPlugin());
+      cursor.use(new FloatingWaitForUserPlugin());
+    } else if (settings.plugins.waitForUser) {
+      cursor.use(new SpotlightPlugin());
+      cursor.use(new WaitForUserPlugin());
+    }
 
-    cursor
+    let sequence = cursor
       .move('#demo-input')
       .click('#demo-input')
       .type('#demo-input', 'Hello Cursor.js!')
       .wait(500)
       .say('Nice to meet you!', { duration: 2000 })
-      .wait(500)
-      .move('#demo-button')
-      .click('#demo-button');
+      .wait(500);
+
+    if (settings.plugins.floatingWaitForUser || settings.plugins.waitForUser) {
+      sequence = (sequence.hover('#demo-button') as any).waitForUser({
+        target: '#demo-button',
+        event: 'click',
+        message: 'Your turn: click the button to continue.',
+        spotlight: true,
+        backdrop: true,
+        pauseEffects: true,
+        speak: true,
+        resumeLabel: 'Skip manually',
+      });
+    } else {
+      sequence = sequence.move('#demo-button').click('#demo-button');
+    }
   };
 
   return (
@@ -638,6 +678,36 @@ export function ClientPage() {
             switchChecked={settings.plugins.floatingPrompt}
             onSwitchChange={(val) =>
               dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingPrompt', enabled: val })
+            }
+          />
+          <SidebarItem
+            id="waitForUser"
+            hasDemo
+            demoUrl="/demos/wait-for-user"
+            label="Wait For User"
+            icon={Hand}
+            activeCategory={activeCategory}
+            onClick={() => setActiveCategory('waitForUser')}
+            isPro
+            hasSwitch
+            switchChecked={settings.plugins.waitForUser}
+            onSwitchChange={(val) =>
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'waitForUser', enabled: val })
+            }
+          />
+          <SidebarItem
+            id="floatingWaitForUser"
+            hasDemo
+            demoUrl="/demos/floating-wait-for-user"
+            label="Floating Wait For User"
+            icon={Hand}
+            activeCategory={activeCategory}
+            onClick={() => setActiveCategory('floatingWaitForUser')}
+            isPro
+            hasSwitch
+            switchChecked={settings.plugins.floatingWaitForUser}
+            onSwitchChange={(val) =>
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingWaitForUser', enabled: val })
             }
           />
           <SidebarItem
@@ -1026,6 +1096,26 @@ export function ClientPage() {
             >
               <div className="text-muted-foreground text-sm">
                 Pro positioning for <code>.prompt()</code> popups using Floating UI.
+              </div>
+            </div>
+          )}
+          {activeCategory === 'waitForUser' && (
+            <div
+              className={`space-y-6 ${!settings.plugins.waitForUser ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className="text-muted-foreground text-sm">
+                Pro handoff flow for <code>.waitForUser()</code>. Pause the automation, spotlight
+                the target, and continue only after a real user interaction.
+              </div>
+            </div>
+          )}
+          {activeCategory === 'floatingWaitForUser' && (
+            <div
+              className={`space-y-6 ${!settings.plugins.floatingWaitForUser ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className="text-muted-foreground text-sm">
+                Floating UI positioning for <code>.waitForUser()</code> panels plus speech/TTS
+                narration support through <code>SpeechPlugin</code> or <code>GeminiTTSPlugin</code>.
               </div>
             </div>
           )}

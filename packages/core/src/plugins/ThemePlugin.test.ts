@@ -117,4 +117,17 @@ describe('ThemePlugin', () => {
     expect(wrapper.style.getPropertyValue('--cursor-primary')).toBe('#ff0000');
     expect(wrapper.style.getPropertyValue('--cursor-outline')).toBe('#0000ff');
   });
+
+  it('uses the built-in pointer hotspot offset', async () => {
+    const themePlugin = new ThemePlugin();
+    const c = new Cursor();
+    c.use(themePlugin);
+
+    await c.setState({ theme: { cursor: 'pointer' } });
+
+    const wrapper = c.cursor.el.querySelector('.cursor-theme-wrapper') as HTMLElement;
+    expect(wrapper.style.transform).toBe('translate(-8px, -0px)');
+
+    c.destroy();
+  });
 });

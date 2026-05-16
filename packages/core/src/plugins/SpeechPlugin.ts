@@ -30,6 +30,8 @@ export class SpeechPlugin implements CursorPlugin {
     voiceName: string;
     waitUntilFinished: boolean;
   };
+  private cursor: Cursor | null = null;
+  private speechRequestedHandler: ((text: string, options?: any) => Promise<void>) | null = null;
 
   constructor(options: SpeechPluginOptions = {}) {
     this.options = {
@@ -44,10 +46,11 @@ export class SpeechPlugin implements CursorPlugin {
   }
 
   install(cursor: Cursor) {
+    this.cursor = cursor;
     // Note: SayPlugin's onBeforeSay override is kept for backward compatibility,
     // but SpeechPlugin now also listens to 'speech_requested' via event emitter.
 
-    cursor.on('speech_requested', async (text: string, options?: any) => {
+    this.speechRequestedHandler = async (text: string, options?: any) => {
       const shouldSpeak = this.options.enabled && options?.speak !== false;
       const waitUntilFinished =
         options?.speech?.waitUntilFinished ??
@@ -62,7 +65,9 @@ export class SpeechPlugin implements CursorPlugin {
           playPromise.catch((e) => console.error('[SpeechPlugin]', e));
         }
       }
-    });
+    };
+
+    cursor.on('speech_requested', this.speechRequestedHandler);
 
     const sayPlugin = (cursor as any).plugins?.find((p: any) => p.name === 'say');
     if (!(sayPlugin instanceof SayPluginClass)) {
@@ -77,6 +82,15 @@ export class SpeechPlugin implements CursorPlugin {
     // Actually, sayPlugin now emits `speech_requested`. So we DO NOT need to override `onBeforeSay`.
     // We will just leave it. Or remove the override.
     // Let's remove the SayPlugin override to prevent double-speaking.
+  }
+
+  onDestroy(): void {
+    if (this.cursor && this.speechRequestedHandler) {
+      this.cursor.off('speech_requested', this.speechRequestedHandler);
+    }
+
+    this.speechRequestedHandler = null;
+    this.cursor = null;
   }
 
   private speak(text: string): Promise<void> {

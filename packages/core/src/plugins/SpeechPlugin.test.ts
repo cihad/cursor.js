@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Cursor } from '../core/Cursor';
 import { SayPlugin } from './SayPlugin';
 import { SpeechPlugin } from './SpeechPlugin';
@@ -46,5 +46,17 @@ describe('SpeechPlugin', () => {
     // requires browser APIs that are hard to mock
     const hook = sayPlugin.onBeforeSay;
     expect(hook).toBeDefined();
+  });
+
+  it('removes the speech_requested listener when destroyed', async () => {
+    const speakSpy = vi.spyOn(speechPlugin as any, 'speak').mockResolvedValue(undefined);
+
+    await cursor.emitAsync('speech_requested', 'before destroy');
+    expect(speakSpy).toHaveBeenCalledTimes(1);
+
+    cursor.removePlugin('speech');
+    await cursor.emitAsync('speech_requested', 'after destroy');
+
+    expect(speakSpy).toHaveBeenCalledTimes(1);
   });
 });

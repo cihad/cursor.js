@@ -69,6 +69,7 @@ import {
   type ThemeCursorPresetSelection,
   type ThemeCursorSelection,
 } from '@/lib/theme-cursors';
+import { normalizePluginToggleState } from '@/lib/plugin-settings';
 
 // Settings type and reducer from home page
 type SettingsState = {
@@ -197,7 +198,10 @@ const initialSettings: SettingsState = {
 function settingsReducer(state: SettingsState, action: SettingsAction): SettingsState {
   switch (action.type) {
     case 'TOGGLE_PLUGIN':
-      return { ...state, plugins: { ...state.plugins, [action.plugin]: action.enabled } };
+      return {
+        ...state,
+        plugins: normalizePluginToggleState(state.plugins, action.plugin, action.enabled),
+      };
     case 'UPDATE_CORE_CONFIG':
       return { ...state, coreConfig: { ...state.coreConfig, [action.key]: action.value } };
     case 'UPDATE_INDICATOR_CONFIG':

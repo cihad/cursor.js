@@ -24,11 +24,9 @@ import {
   ParticlePlugin,
   GeminiTTSPlugin,
   OutlinePlugin,
+  FloatingPlugin,
   SpotlightPlugin,
   WaitForUserPlugin,
-  FloatingWaitForUserPlugin,
-  createFloatingSayPositioner,
-  createFloatingPromptPositioner,
 } from '@cursor.js/pro';
 
 import {
@@ -103,10 +101,8 @@ type SettingsState = {
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
-    floatingSay: boolean;
-    floatingPrompt: boolean;
+    floating: boolean;
     waitForUser: boolean;
-    floatingWaitForUser: boolean;
   };
   rippleConfig: {
     color: string;
@@ -195,10 +191,8 @@ const initialSettings: SettingsState = {
     speech: false,
     geminiTts: true,
     outline: true,
-    floatingSay: true,
-    floatingPrompt: true,
+    floating: true,
     waitForUser: false,
-    floatingWaitForUser: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -398,15 +392,15 @@ c.move('#btn1')
     });
 
     // Seed action-augmenting plugins before building the demo sequence.
-    if (settings.plugins.floatingPrompt) {
-      c.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
-    } else if (settings.plugins.prompt) {
+    if (settings.plugins.floating) {
+      c.use(new FloatingPlugin());
+    }
+
+    if (settings.plugins.prompt) {
       c.use(new PromptPlugin());
     }
 
-    if (settings.plugins.floatingSay) {
-      c.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
-    } else if (settings.plugins.say) {
+    if (settings.plugins.say) {
       c.use(new SayPlugin());
     }
 
@@ -414,10 +408,7 @@ c.move('#btn1')
       c.use(new OutlinePlugin());
     }
 
-    if (settings.plugins.floatingWaitForUser) {
-      c.use(new SpotlightPlugin());
-      c.use(new FloatingWaitForUserPlugin());
-    } else if (settings.plugins.waitForUser) {
+    if (settings.plugins.waitForUser) {
       c.use(new SpotlightPlugin());
       c.use(new WaitForUserPlugin());
     }
@@ -699,20 +690,21 @@ c.move('#btn1')
       c.removePlugin('particle');
     }
 
-    if (plugins.floatingPrompt) {
-      c.removePlugin('prompt');
-      c.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
-    } else if (plugins.prompt) {
+    if (plugins.floating) {
+      c.removePlugin('floating');
+      c.use(new FloatingPlugin());
+    } else {
+      c.removePlugin('floating');
+    }
+
+    if (plugins.prompt) {
       c.removePlugin('prompt');
       c.use(new PromptPlugin());
     } else {
       c.removePlugin('prompt');
     }
 
-    if (plugins.floatingSay) {
-      c.removePlugin('say');
-      c.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
-    } else if (plugins.say) {
+    if (plugins.say) {
       c.removePlugin('say');
       c.use(new SayPlugin());
     } else {
@@ -747,12 +739,7 @@ c.move('#btn1')
       c.removePlugin('outline');
     }
 
-    if (plugins.floatingWaitForUser) {
-      c.removePlugin('spotlight');
-      c.use(new SpotlightPlugin());
-      c.removePlugin('wait-for-user');
-      c.use(new FloatingWaitForUserPlugin());
-    } else if (plugins.waitForUser) {
+    if (plugins.waitForUser) {
       c.removePlugin('spotlight');
       c.use(new SpotlightPlugin());
       c.removePlugin('wait-for-user');
@@ -1069,11 +1056,11 @@ c.move('#btn1')
                         </SettingsAccordionContent>
                       </AccordionItem>
 
-                      {/* Floating Say Plugin */}
-                      <AccordionItem value="floating-say" className="relative">
+                      {/* Floating Plugin */}
+                      <AccordionItem value="floating" className="relative">
                         <SettingsAccordionTrigger className="hover:no-underline">
                           <div className="flex items-center gap-1.5">
-                            Floating Say
+                            Floating
                             <span title="Pro" className="flex items-center">
                               <Gem className="w-4 h-4 text-orange-500" />
                             </span>
@@ -1086,8 +1073,8 @@ c.move('#btn1')
                                 className="z-[9999999] w-[320px] rounded-lg border bg-background p-4 text-sm shadow-md"
                               >
                                 <p>
-                                  Upgrades speech bubbles with Floating UI placement, collision
-                                  handling, and automatic repositioning.
+                                  Shared Floating UI positioning for <code>.say()</code>,{' '}
+                                  <code>.prompt()</code>, and <code>.waitForUser()</code>.
                                 </p>
                               </HoverCardContent>
                             </HoverCard>
@@ -1095,12 +1082,12 @@ c.move('#btn1')
                         </SettingsAccordionTrigger>
                         <div className="absolute right-0 top-4">
                           <Switch
-                            id="enable-floating-say"
-                            checked={settings.plugins.floatingSay}
+                            id="enable-floating"
+                            checked={settings.plugins.floating}
                             onCheckedChange={(checked) =>
                               dispatch({
                                 type: 'TOGGLE_PLUGIN',
-                                plugin: 'floatingSay',
+                                plugin: 'floating',
                                 enabled: checked,
                               })
                             }
@@ -1109,8 +1096,9 @@ c.move('#btn1')
                         <SettingsAccordionContent>
                           <div className="space-y-2 py-2">
                             <p className="text-xs text-muted-foreground">
-                              Provides the same <code>.say()</code> action with smarter popup
-                              positioning.
+                              Enables Floating UI collision-aware positioning for any enabled{' '}
+                              <code>SayPlugin</code>, <code>PromptPlugin</code>, or{' '}
+                              <code>WaitForUserPlugin</code> instances.
                             </p>
                           </div>
                         </SettingsAccordionContent>
@@ -1725,53 +1713,6 @@ c.move('#btn1')
                         </div>
                       </AccordionItem>
 
-                      {/* Floating Prompt Plugin */}
-                      <AccordionItem value="floating-prompt" className="relative">
-                        <SettingsAccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">
-                            Floating Prompt
-                            <span title="Pro" className="flex items-center">
-                              <Gem className="w-4 h-4 text-orange-500" />
-                            </span>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-                              </HoverCardTrigger>
-                              <HoverCardContent
-                                side="left"
-                                className="z-[9999999] w-[320px] rounded-lg border bg-background p-4 text-sm shadow-md"
-                              >
-                                <p>
-                                  Upgrades interactive prompts with Floating UI placement, collision
-                                  handling, and automatic repositioning.
-                                </p>
-                              </HoverCardContent>
-                            </HoverCard>
-                          </div>
-                        </SettingsAccordionTrigger>
-                        <div className="absolute right-0 top-4">
-                          <Switch
-                            id="enable-floating-prompt"
-                            checked={settings.plugins.floatingPrompt}
-                            onCheckedChange={(checked) =>
-                              dispatch({
-                                type: 'TOGGLE_PLUGIN',
-                                plugin: 'floatingPrompt',
-                                enabled: checked,
-                              })
-                            }
-                          />
-                        </div>
-                        <SettingsAccordionContent>
-                          <div className="space-y-2 py-2">
-                            <p className="text-xs text-muted-foreground">
-                              Provides the same <code>.prompt()</code> action with smarter popup
-                              positioning.
-                            </p>
-                          </div>
-                        </SettingsAccordionContent>
-                      </AccordionItem>
-
                       <AccordionItem value="wait-for-user" className="relative">
                         <SettingsAccordionTrigger className="hover:no-underline">
                           <div className="flex items-center gap-1.5">
@@ -1814,53 +1755,6 @@ c.move('#btn1')
                             <p className="text-xs text-muted-foreground">
                               Pauses the script, highlights the next target, and lets a real user
                               finish the step before the demo resumes.
-                            </p>
-                          </div>
-                        </SettingsAccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="floating-wait-for-user" className="relative">
-                        <SettingsAccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center gap-1.5">
-                            Floating Wait For User
-                            <span title="Pro" className="flex items-center">
-                              <Gem className="w-4 h-4 text-orange-500" />
-                            </span>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
-                              </HoverCardTrigger>
-                              <HoverCardContent
-                                side="left"
-                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
-                              >
-                                <iframe
-                                  src="/demos/floating-wait-for-user"
-                                  className="w-full h-full border-0 overflow-hidden"
-                                  scrolling="no"
-                                />
-                              </HoverCardContent>
-                            </HoverCard>
-                          </div>
-                        </SettingsAccordionTrigger>
-                        <div className="absolute right-0 top-4">
-                          <Switch
-                            id="enable-floating-wait-for-user"
-                            checked={settings.plugins.floatingWaitForUser}
-                            onCheckedChange={(checked) =>
-                              dispatch({
-                                type: 'TOGGLE_PLUGIN',
-                                plugin: 'floatingWaitForUser',
-                                enabled: checked,
-                              })
-                            }
-                          />
-                        </div>
-                        <SettingsAccordionContent>
-                          <div className="space-y-2 py-2">
-                            <p className="text-xs text-muted-foreground">
-                              Keeps the handoff panel near the cursor with Floating UI while still
-                              supporting spotlight focus and voice narration.
                             </p>
                           </div>
                         </SettingsAccordionContent>

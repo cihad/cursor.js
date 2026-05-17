@@ -1,0 +1,115 @@
+---
+title: Floating Plugin
+description: Use one Floating UI provider to position SayPlugin, PromptPlugin, and WaitForUserPlugin.
+---
+
+## `FloatingPlugin`
+
+`FloatingPlugin` is the shared Floating UI provider for Cursor.js Pro. Instead of installing separate floating variants for each interaction plugin, you install `FloatingPlugin` once and let `SayPlugin`, `PromptPlugin`, and `WaitForUserPlugin` opt into it automatically.
+
+## Installation
+
+```bash
+npm install @cursor.js/pro @floating-ui/dom
+```
+
+## Basic Usage
+
+```ts
+import { Cursor, SayPlugin, PromptPlugin } from '@cursor.js/core';
+import { FloatingPlugin, SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+
+cursor.use(new FloatingPlugin());
+cursor.use(new SayPlugin());
+cursor.use(new PromptPlugin());
+cursor.use(new SpotlightPlugin());
+cursor.use(new WaitForUserPlugin());
+```
+
+`SpotlightPlugin` is not a dependency of `FloatingPlugin`. It only appears in that example because `WaitForUserPlugin` can optionally render spotlight/backdrop guidance, and that visual layer lives in `SpotlightPlugin`.
+
+With that setup:
+
+- `.say()` bubbles use Floating UI placement
+- `.prompt()` panels use Floating UI placement
+- `.waitForUser()` panels use Floating UI placement
+
+## Enable Only Selected Plugin Families
+
+If you only want Floating UI for part of the surface, configure `FloatingPlugin` selectively:
+
+```ts
+import { Cursor, SayPlugin, PromptPlugin } from '@cursor.js/core';
+import { FloatingPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+
+cursor.use(
+  new FloatingPlugin({
+    say: true,
+    prompt: { placement: 'top-start' },
+    waitForUser: false,
+  }),
+);
+
+cursor.use(new SayPlugin());
+cursor.use(new PromptPlugin());
+```
+
+## Wait For User Example
+
+```ts
+import { Cursor } from '@cursor.js/core';
+import { FloatingPlugin, SpotlightPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+
+cursor.use(new FloatingPlugin({ waitForUser: true }));
+cursor.use(new SpotlightPlugin());
+cursor.use(new WaitForUserPlugin());
+
+cursor.waitForUser({
+  target: '#confirm',
+  event: 'click',
+  message: 'Review this step and continue.',
+  position: 'cursor',
+  spotlight: true,
+  backdrop: true,
+  resumeLabel: 'Skip manually',
+});
+```
+
+If you do not use spotlight or backdrop features, you can skip `SpotlightPlugin` entirely:
+
+```ts
+import { Cursor } from '@cursor.js/core';
+import { FloatingPlugin, WaitForUserPlugin } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+
+cursor.use(new FloatingPlugin({ waitForUser: true }));
+cursor.use(new WaitForUserPlugin());
+```
+
+## Without `FloatingPlugin`
+
+The base plugins still work normally when `FloatingPlugin` is not installed. They fall back to their existing built-in positioning behavior, so `@floating-ui/dom` stays optional for users who do not need collision-aware placement.
+
+## Manual Positioners
+
+If you want direct control without installing the shared provider, the helper exports are still available:
+
+```ts
+import { Cursor, SayPlugin } from '@cursor.js/core';
+import { createFloatingSayPositioner } from '@cursor.js/pro';
+
+const cursor = new Cursor();
+
+cursor.use(
+  new SayPlugin({
+    positioner: createFloatingSayPositioner(),
+  }),
+);
+```

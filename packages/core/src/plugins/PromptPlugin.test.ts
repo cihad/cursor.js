@@ -2,6 +2,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Cursor } from '../core/Cursor';
 import { PromptPlugin } from './PromptPlugin';
 
+class FloatingProviderPlugin {
+  name = 'floating';
+  private positioner: any;
+  constructor(positioner: any) {
+    this.positioner = positioner;
+  }
+  install() {}
+  getPromptPositioner() {
+    return this.positioner;
+  }
+}
+
 describe('PromptPlugin', () => {
   let cursor: Cursor;
   let rectSpy: ReturnType<typeof vi.spyOn>;
@@ -165,6 +177,29 @@ describe('PromptPlugin', () => {
     expect(positioner).toHaveBeenCalledOnce();
     expect(promptEl?.style.left).toBe('12px');
     expect(promptEl?.style.top).toBe('34px');
+
+    promptEl?.querySelector('button')?.click();
+    await cursor;
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('uses the floating provider positioner when installed', async () => {
+    const cleanup = vi.fn();
+    const positioner = vi.fn(({ promptElement }) => {
+      promptElement.style.left = '56px';
+      promptElement.style.top = '78px';
+      return cleanup;
+    });
+
+    cursor.use(new FloatingProviderPlugin(positioner) as any);
+    cursor.use(new PromptPlugin());
+    cursor.prompt('Floating provider prompt');
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    const promptEl = document.querySelector<HTMLElement>('.cursor-js-prompt');
+    expect(positioner).toHaveBeenCalledOnce();
+    expect(promptEl?.style.left).toBe('56px');
+    expect(promptEl?.style.top).toBe('78px');
 
     promptEl?.querySelector('button')?.click();
     await cursor;

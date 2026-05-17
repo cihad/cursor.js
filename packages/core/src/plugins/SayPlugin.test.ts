@@ -2,6 +2,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Cursor } from '../core/Cursor';
 import { SayPlugin } from './SayPlugin';
 
+class FloatingProviderPlugin {
+  name = 'floating';
+  private positioner: any;
+  constructor(positioner: any) {
+    this.positioner = positioner;
+  }
+  install() {}
+  getSayPositioner() {
+    return this.positioner;
+  }
+}
+
 describe('SayPlugin', () => {
   let cursor: Cursor;
   let rectSpy: ReturnType<typeof vi.spyOn>;
@@ -106,6 +118,23 @@ describe('SayPlugin', () => {
 
     cursor.use(new SayPlugin({ positioner }));
     cursor.say('Custom position', { duration: 1, waitUntilFinished: true });
+    await cursor;
+
+    expect(positioner).toHaveBeenCalledOnce();
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('uses the floating provider positioner when installed', async () => {
+    const cleanup = vi.fn();
+    const positioner = vi.fn(({ bubbleElement }) => {
+      bubbleElement.style.left = '56px';
+      bubbleElement.style.top = '78px';
+      return cleanup;
+    });
+
+    cursor.use(new FloatingProviderPlugin(positioner) as any);
+    cursor.use(new SayPlugin());
+    cursor.say('Floating provider', { duration: 1, waitUntilFinished: true });
     await cursor;
 
     expect(positioner).toHaveBeenCalledOnce();

@@ -4,8 +4,6 @@
 
 // Make a catch-all proxy so any imported variable correctly maps to a no-op function / empty object
 import {
-  PromptPlugin,
-  SayPlugin,
   type Cursor,
   type PromptPositioner,
   type SayPositioner,
@@ -85,35 +83,24 @@ export const ParticlePlugin = class {
   destroy() {}
 };
 
-export const FloatingSayPlugin = class {
-  name = 'say';
-  private fallback = new SayPlugin();
-
+export const FloatingPlugin = class {
+  name = 'floating';
   constructor(_args?: unknown) {}
-  install(cursor: Cursor) {
-    this.fallback.install(cursor);
+  install() {}
+  getSayPositioner(): SayPositioner | undefined {
+    return () => {};
   }
-  onDestroy() {
-    this.fallback.onDestroy?.();
+  getPromptPositioner(): PromptPositioner | undefined {
+    return () => {};
+  }
+  getWaitForUserPositioner() {
+    return () => {};
   }
 };
 
 export function createFloatingSayPositioner(): SayPositioner {
   return () => {};
 }
-
-export const FloatingPromptPlugin = class {
-  name = 'prompt';
-  private fallback = new PromptPlugin();
-
-  constructor(_args?: unknown) {}
-  install(cursor: Cursor) {
-    this.fallback.install(cursor);
-  }
-  onDestroy() {
-    this.fallback.onDestroy?.();
-  }
-};
 
 export function createFloatingPromptPositioner(): PromptPositioner {
   return () => {};
@@ -450,25 +437,6 @@ export const WaitForUserPlugin = class {
       throw new Error('WaitForUserPlugin mock panel is missing.');
     }
     return panel;
-  }
-};
-
-export const FloatingWaitForUserPlugin = class {
-  name = 'wait-for-user';
-  private fallback = new WaitForUserPlugin();
-
-  constructor(_args?: unknown) {}
-  install(cursor: Cursor) {
-    this.fallback.install(cursor);
-  }
-  resume(value?: unknown) {
-    this.fallback.resume(value);
-  }
-  cancel(value?: unknown) {
-    this.fallback.cancel(value);
-  }
-  onDestroy() {
-    this.fallback.onDestroy?.();
   }
 };
 

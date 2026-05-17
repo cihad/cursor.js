@@ -41,6 +41,10 @@ export interface PromptPluginOptions {
   positioner?: PromptPositioner;
 }
 
+interface FloatingPromptProvider {
+  getPromptPositioner: () => PromptPositioner | undefined;
+}
+
 export class PromptPlugin implements CursorPlugin {
   name = 'prompt';
   private options: PromptPluginOptions;
@@ -86,6 +90,7 @@ export class PromptPlugin implements CursorPlugin {
     resolve: (value: any) => void,
   ) {
     const position = options?.position || this.options.defaultPosition || 'center';
+    const positioner = this.resolvePositioner(cursor);
 
     this.cleanupPosition();
 
@@ -164,9 +169,15 @@ export class PromptPlugin implements CursorPlugin {
     }
 
     document.body.appendChild(this.promptElement);
-    this.positionCleanup = await this.positionPrompt(cursor, this.promptElement, position, options);
+    this.positionCleanup = await this.positionPrompt(
+      cursor,
+      this.promptElement,
+      position,
+      options,
+      positioner,
+    );
 
-    if (position === 'cursor' && !this.options.positioner) {
+    if (position === 'cursor' && !positioner) {
       this.moveIntervalId = setInterval(() => {
         if (this.promptElement && cursor.cursor && cursor.cursor.el) {
           this.positionCursorPrompt(cursor, this.promptElement);
@@ -190,9 +201,10 @@ export class PromptPlugin implements CursorPlugin {
     promptElement: HTMLElement,
     position: PromptPosition,
     options?: PromptOptions,
+    positioner?: PromptPositioner,
   ): Promise<PromptPositionerCleanup | null> {
-    if (this.options.positioner) {
-      const cleanup = await this.options.positioner({
+    if (positioner) {
+      const cleanup = await positioner({
         cursor,
         cursorElement: cursor.cursor.el,
         promptElement,
@@ -257,4 +269,24 @@ export class PromptPlugin implements CursorPlugin {
     this.positionCleanup?.();
     this.positionCleanup = null;
   }
+
+  private resolvePositioner(cursor: Cursor): PromptPositioner | undefined {
+    if (this.options.positioner) {
+      return this.options.positioner;
+    }
+
+    const floatingPlugin = cursor.getPlugin('floating');
+    return isFloatingPromptProvider(floatingPlugin)
+      ? floatingPlugin.getPromptPositioner()
+      : undefined;
+  }
+}
+
+function isFloatingPromptProvider(plugin: unknown): plugin is FloatingPromptProvider {
+  return (
+    typeof plugin === 'object' &&
+    plugin !== null &&
+    'getPromptPositioner' in plugin &&
+    typeof plugin.getPromptPositioner === 'function'
+  );
 }

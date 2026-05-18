@@ -180,19 +180,19 @@ const initialSettings: SettingsState = {
   },
   plugins: {
     theme: true,
-    ripple: true,
+    ripple: false,
     indicator: true,
-    sound: false,
+    sound: true,
     logging: false,
     trail: true,
     particle: true,
-    say: false,
+    say: true,
     prompt: false,
     speech: false,
     geminiTts: true,
     outline: true,
     floating: true,
-    waitForUser: false,
+    waitForUser: true,
   },
   rippleConfig: {
     color: '#000000',
@@ -379,6 +379,7 @@ c.move('#btn1')
       speed: settings.coreConfig.speed,
     });
     actorRef.current = c;
+    setDemoState('idle');
     let isActive = true;
 
     // Listen to native kütüphane events for UI state sync
@@ -437,10 +438,10 @@ c.move('#btn1')
         .if(
           hasOutline,
           (ctx) =>
-            ((ctx as any).outlineCircle('#hero-title', {
+            (ctx as any).outlineCircle('#hero-title', {
               duration: 1500,
               loopCount: 1,
-            }) as Cursor),
+            }) as Cursor,
         )
         .wait(1000)
         .until(
@@ -530,12 +531,8 @@ c.move('#btn1')
           (ctx) => ctx.say("Let's delete this one.", { duration: 1500, position: 'subtitle' }),
         )
         .wait(1000)
-        .if(
-          hasOutline,
-          (ctx) =>
-            (ctx as any)
-              .outlineUnderline('.todo-item-2', { duration: 1000, loopCount: 2 })
-              .wait(300),
+        .if(hasOutline, (ctx) =>
+          (ctx as any).outlineUnderline('.todo-item-2', { duration: 1000, loopCount: 2 }).wait(300),
         )
         .hover('#todo-delete-2')
         .wait(300)
@@ -594,8 +591,17 @@ c.move('#btn1')
       isActive = false;
       c.destroy();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    settings.plugins.floating,
+    settings.plugins.outline,
+    settings.plugins.prompt,
+    settings.plugins.say,
+    settings.plugins.speech,
+    settings.plugins.geminiTts,
+    settings.plugins.waitForUser,
+    settings.coreConfig.humanize,
+    settings.coreConfig.speed,
+  ]);
 
   // Sync cursor plugins whenever settings change
   useEffect(() => {

@@ -1,5 +1,16 @@
 # docs
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [a96913a]
+- Updated dependencies [d2b6e93]
+- Updated dependencies [85bb178]
+- Updated dependencies [55278f5]
+- Updated dependencies [6c33516]
+  - @cursor.js/core@0.8.0
+
 ## 0.5.1
 
 ### Patch Changes

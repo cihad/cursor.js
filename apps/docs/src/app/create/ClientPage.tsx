@@ -86,6 +86,7 @@ type SettingsState = {
     geminiTts: boolean;
     outline: boolean;
     floating: boolean;
+    spotlight: boolean;
     waitForUser: boolean;
   };
   rippleConfig: { color: string; duration: number; size: number };
@@ -162,6 +163,7 @@ const initialSettings: SettingsState = {
     geminiTts: true,
     outline: true,
     floating: true,
+    spotlight: true,
     waitForUser: true,
   },
   rippleConfig: { color: '#000000', duration: 600, size: 50 },
@@ -352,8 +354,11 @@ export function ClientPage() {
     if (settings.plugins.floating) {
       activePro.push('FloatingPlugin');
     }
+    if (settings.plugins.spotlight) {
+      activePro.push('SpotlightPlugin');
+    }
     if (settings.plugins.waitForUser) {
-      activePro.push('SpotlightPlugin', 'WaitForUserPlugin');
+      activePro.push('WaitForUserPlugin');
     }
 
     coreImports.push(...activeCore);
@@ -425,8 +430,10 @@ export function ClientPage() {
       const paramStr = diffStr === '()' ? '()' : diffStr;
       initLines.push(`cursor.use(new GeminiTTSPlugin${paramStr});`);
     }
-    if (settings.plugins.waitForUser) {
+    if (settings.plugins.spotlight) {
       initLines.push(`cursor.use(new SpotlightPlugin());`);
+    }
+    if (settings.plugins.waitForUser) {
       initLines.push(`cursor.use(new WaitForUserPlugin());`);
     }
 
@@ -473,8 +480,10 @@ export function ClientPage() {
     if (settings.plugins.geminiTts) {
       cursor.use(new GeminiTTSPlugin(settings.geminiTtsConfig));
     }
-    if (settings.plugins.waitForUser) {
+    if (settings.plugins.spotlight) {
       cursor.use(new SpotlightPlugin());
+    }
+    if (settings.plugins.waitForUser) {
       cursor.use(new WaitForUserPlugin());
     }
 
@@ -491,8 +500,8 @@ export function ClientPage() {
         target: '#demo-button',
         event: 'click',
         message: 'Your turn: click the button to continue.',
-        spotlight: true,
-        backdrop: true,
+        spotlight: settings.plugins.spotlight,
+        backdrop: settings.plugins.spotlight,
         pauseEffects: true,
         speak: true,
         resumeLabel: 'Skip manually',
@@ -651,6 +660,21 @@ export function ClientPage() {
             switchChecked={settings.plugins.prompt}
             onSwitchChange={(val) =>
               dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'prompt', enabled: val })
+            }
+          />
+          <SidebarItem
+            id="spotlight"
+            hasDemo
+            demoUrl="/demos/spotlight"
+            label="Spotlight"
+            icon={Gem}
+            activeCategory={activeCategory}
+            onClick={() => setActiveCategory('spotlight')}
+            isPro
+            hasSwitch
+            switchChecked={settings.plugins.spotlight}
+            onSwitchChange={(val) =>
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'spotlight', enabled: val })
             }
           />
           <SidebarItem
@@ -1040,6 +1064,16 @@ export function ClientPage() {
               </div>
             </div>
           )}
+          {activeCategory === 'spotlight' && (
+            <div
+              className={`space-y-6 ${!settings.plugins.spotlight ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              <div className="text-muted-foreground text-sm">
+                Reusable focus frame for <code>.spotlight()</code> and optional backdrop dimming.
+                Pair it with <code>.waitForUser()</code> when you want guided handoff emphasis.
+              </div>
+            </div>
+          )}
           {activeCategory === 'prompt' && (
             <div
               className={`space-y-6 ${!settings.plugins.prompt ? 'opacity-50 pointer-events-none' : ''}`}
@@ -1054,8 +1088,9 @@ export function ClientPage() {
               className={`space-y-6 ${!settings.plugins.waitForUser ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <div className="text-muted-foreground text-sm">
-                Pro handoff flow for <code>.waitForUser()</code>. Pause the automation, spotlight
-                the target, and continue only after a real user interaction.
+                Pro handoff flow for <code>.waitForUser()</code>. Pause the automation and
+                continue only after a real user interaction. Enable Spotlight as well for visual
+                target emphasis.
               </div>
             </div>
           )}

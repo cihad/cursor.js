@@ -102,6 +102,7 @@ type SettingsState = {
     geminiTts: boolean;
     outline: boolean;
     floating: boolean;
+    spotlight: boolean;
     waitForUser: boolean;
   };
   rippleConfig: {
@@ -192,6 +193,7 @@ const initialSettings: SettingsState = {
     geminiTts: true,
     outline: true,
     floating: true,
+    spotlight: true,
     waitForUser: true,
   },
   rippleConfig: {
@@ -409,8 +411,11 @@ c.move('#btn1')
       c.use(new OutlinePlugin());
     }
 
-    if (settings.plugins.waitForUser) {
+    if (settings.plugins.spotlight) {
       c.use(new SpotlightPlugin());
+    }
+
+    if (settings.plugins.waitForUser) {
       c.use(new WaitForUserPlugin());
     }
 
@@ -420,6 +425,7 @@ c.move('#btn1')
       const hasSay = Boolean(c.getPlugin('say'));
       const hasPrompt = Boolean(c.getPlugin('prompt'));
       const hasOutline = () => Boolean(c.getPlugin('outline'));
+      const hasSpotlight = Boolean(c.getPlugin('spotlight'));
       const hasWaitForUser = Boolean(c.getPlugin('wait-for-user'));
 
       let sequence = c
@@ -552,8 +558,8 @@ c.move('#btn1')
               target: '#todo-confirm-delete',
               event: 'click',
               message: 'Your turn: confirm the deletion to continue.',
-              spotlight: true,
-              backdrop: true,
+              spotlight: hasSpotlight,
+              backdrop: hasSpotlight,
               pauseEffects: true,
               speak: true,
               resumeLabel: 'Skip manually',
@@ -598,6 +604,7 @@ c.move('#btn1')
     settings.plugins.say,
     settings.plugins.speech,
     settings.plugins.geminiTts,
+    settings.plugins.spotlight,
     settings.plugins.waitForUser,
     settings.coreConfig.humanize,
     settings.coreConfig.speed,
@@ -745,13 +752,17 @@ c.move('#btn1')
       c.removePlugin('outline');
     }
 
-    if (plugins.waitForUser) {
+    if (plugins.spotlight) {
       c.removePlugin('spotlight');
       c.use(new SpotlightPlugin());
+    } else {
+      c.removePlugin('spotlight');
+    }
+
+    if (plugins.waitForUser) {
       c.removePlugin('wait-for-user');
       c.use(new WaitForUserPlugin());
     } else {
-      c.removePlugin('spotlight');
       c.removePlugin('wait-for-user');
     }
   }, [settings]);
@@ -1719,6 +1730,53 @@ c.move('#btn1')
                         </div>
                       </AccordionItem>
 
+                      <AccordionItem value="spotlight" className="relative">
+                        <SettingsAccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-1.5">
+                            Spotlight
+                            <span title="Pro" className="flex items-center">
+                              <Gem className="w-4 h-4 text-orange-500" />
+                            </span>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                              </HoverCardTrigger>
+                              <HoverCardContent
+                                side="left"
+                                className="p-0 z-[9999999] overflow-hidden border bg-background rounded-lg shadow-md w-[320px] h-[250px]"
+                              >
+                                <iframe
+                                  src="/demos/spotlight"
+                                  className="w-full h-full border-0 overflow-hidden"
+                                  scrolling="no"
+                                />
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        </SettingsAccordionTrigger>
+                        <div className="absolute right-0 top-4">
+                          <Switch
+                            id="enable-spotlight"
+                            checked={settings.plugins.spotlight}
+                            onCheckedChange={(checked) =>
+                              dispatch({
+                                type: 'TOGGLE_PLUGIN',
+                                plugin: 'spotlight',
+                                enabled: checked,
+                              })
+                            }
+                          />
+                        </div>
+                        <SettingsAccordionContent>
+                          <div className="space-y-2 py-2">
+                            <p className="text-xs text-muted-foreground">
+                              Adds a reusable focus frame with optional backdrop dimming for
+                              guided steps, narration, and handoff flows.
+                            </p>
+                          </div>
+                        </SettingsAccordionContent>
+                      </AccordionItem>
+
                       <AccordionItem value="wait-for-user" className="relative">
                         <SettingsAccordionTrigger className="hover:no-underline">
                           <div className="flex items-center gap-1.5">
@@ -1759,8 +1817,8 @@ c.move('#btn1')
                         <SettingsAccordionContent>
                           <div className="space-y-2 py-2">
                             <p className="text-xs text-muted-foreground">
-                              Pauses the script, highlights the next target, and lets a real user
-                              finish the step before the demo resumes.
+                              Pauses the script and lets a real user finish the step before the
+                              demo resumes. Enable Spotlight as well for visual target emphasis.
                             </p>
                           </div>
                         </SettingsAccordionContent>

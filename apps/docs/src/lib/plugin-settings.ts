@@ -4,6 +4,7 @@ export type PluginToggleState = {
   speech: boolean;
   geminiTts: boolean;
   floating: boolean;
+  spotlight: boolean;
   waitForUser: boolean;
 };
 

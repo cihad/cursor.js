@@ -10,10 +10,8 @@ const PRO_PLUGINS = [
   'particle',
   'outline',
   'spotlight',
-  'floating-say',
-  'floating-prompt',
+  'floating',
   'wait-for-user',
-  'floating-wait-for-user',
 ];
 
 function patchTree(node: any): any {

@@ -13,9 +13,9 @@ import {
   TrailPlugin,
   ParticlePlugin,
   OutlinePlugin,
+  FloatingPlugin,
   WaitForUserPlugin,
   SpotlightPlugin,
-  FloatingWaitForUserPlugin,
 } from '@cursor.js/pro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -802,8 +802,9 @@ export function FloatingWaitForUserDemo() {
   useEffect(() => {
     let isActive = true;
     const cursor = new Cursor({ speed: 0.75 });
+    cursor.use(new FloatingPlugin({ waitForUser: true }));
     cursor.use(new SpotlightPlugin());
-    cursor.use(new FloatingWaitForUserPlugin());
+    cursor.use(new WaitForUserPlugin());
 
     const resetUi = () => {
       if (!isActive) return;
@@ -863,7 +864,7 @@ export function FloatingWaitForUserDemo() {
 
   return (
     <div className="space-y-4 w-full h-full p-4 flex flex-col justify-center max-w-sm mx-auto text-left">
-      <h4 className="text-sm font-semibold mb-2">Floating Wait For User Plugin</h4>
+      <h4 className="text-sm font-semibold mb-2">Floating Plugin + Wait For User</h4>
       <p className="text-xs text-muted-foreground mb-4">
         Uses Floating UI to keep the handoff panel near the cursor while still supporting
         spotlight focus and speech/TTS narration.

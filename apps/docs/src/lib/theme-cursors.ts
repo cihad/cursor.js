@@ -4,14 +4,29 @@ import {
   type ThemePluginCursorFactory,
   type ThemePluginCursorFactoryOptions,
 } from '@cursor.js/core';
-import {
-  proCursorCatalog,
-  type CursorColorPreset,
-  type CursorSlot,
-  type ProCursorCatalogEntry,
-} from '@cursor.js/pro/cursors';
+import { proCursorCatalog } from '@cursor.js/pro/cursors';
 
-export type { CursorColorPreset };
+export type CursorSlot = 'default' | 'pointer' | 'text';
+
+export interface CursorColorPreset {
+  id: string;
+  label: string;
+  colors: Record<string, string>;
+}
+
+interface ProCursorCatalogEntry {
+  exportName: string;
+  label: string;
+  slot: CursorSlot;
+  presets: CursorColorPreset[];
+  isConfigurable: boolean;
+  defaultColors: Record<string, string>;
+  hotspot: ReturnType<ThemePluginCursorFactory>['hotspot'];
+  previewHtml: string;
+  factory: (
+    options?: ThemePluginCursorFactoryOptions | { colors?: Record<string, string> },
+  ) => ReturnType<ThemePluginCursorFactory>;
+}
 
 export type ThemeCursorSelection = Record<CursorSlot, string>;
 export type ThemeCursorPresetSelection = Record<CursorSlot, string>;
@@ -118,9 +133,9 @@ const coreCatalog = coreCursorDefinitions.reduce(
 );
 
 export const themeCursorCatalog: Record<CursorSlot, ThemeCursorCatalogEntry[]> = {
-  default: [...coreCatalog.default, ...proCursorCatalog.default.map(createProCatalogEntry)],
-  pointer: [...coreCatalog.pointer, ...proCursorCatalog.pointer.map(createProCatalogEntry)],
-  text: [...coreCatalog.text, ...proCursorCatalog.text.map(createProCatalogEntry)],
+  default: [...coreCatalog.default, ...proCursorCatalog.default.map((entry) => createProCatalogEntry(entry as ProCursorCatalogEntry))],
+  pointer: [...coreCatalog.pointer, ...proCursorCatalog.pointer.map((entry) => createProCatalogEntry(entry as ProCursorCatalogEntry))],
+  text: [...coreCatalog.text, ...proCursorCatalog.text.map((entry) => createProCatalogEntry(entry as ProCursorCatalogEntry))],
 };
 
 export const initialThemeCursorSelection: ThemeCursorSelection = {

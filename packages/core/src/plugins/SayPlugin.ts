@@ -38,6 +38,10 @@ export interface SayPluginOptions {
   positioner?: SayPositioner;
 }
 
+interface FloatingSayProvider {
+  getSayPositioner: () => SayPositioner | undefined;
+}
+
 export class SayPlugin implements CursorPlugin {
   name = 'say';
   public onBeforeSay: ((text: string, options?: SayOptions) => Promise<void> | void) | null = null;
@@ -68,6 +72,7 @@ export class SayPlugin implements CursorPlugin {
 
   private async showBubble(cursor: Cursor, text: string, options?: SayOptions) {
     const position = options?.position || this.options.defaultPosition || 'cursor';
+    const positioner = this.resolvePositioner(cursor);
 
     this.cleanupPosition();
 
@@ -119,7 +124,13 @@ export class SayPlugin implements CursorPlugin {
 
     document.body.appendChild(this.bubbleElement);
 
-    this.positionCleanup = await this.positionBubble(cursor, this.bubbleElement, position, options);
+    this.positionCleanup = await this.positionBubble(
+      cursor,
+      this.bubbleElement,
+      position,
+      options,
+      positioner,
+    );
 
     // Fade in
     requestAnimationFrame(() => {
@@ -133,7 +144,7 @@ export class SayPlugin implements CursorPlugin {
     await cursor.emitAsync('speech_requested', text, options);
 
     // Track ghost cursor position if in cursor mode
-    if (position === 'cursor' && !this.options.positioner) {
+    if (position === 'cursor' && !positioner) {
       this.moveIntervalId = setInterval(() => {
         if (this.bubbleElement && cursor.cursor && cursor.cursor.el) {
           this.positionCursorBubble(cursor, this.bubbleElement);
@@ -181,9 +192,10 @@ export class SayPlugin implements CursorPlugin {
     bubbleElement: HTMLElement,
     position: SayBubblePosition,
     options?: SayOptions,
+    positioner?: SayPositioner,
   ): Promise<SayPositionerCleanup | null> {
-    if (this.options.positioner) {
-      const cleanup = await this.options.positioner({
+    if (positioner) {
+      const cleanup = await positioner({
         cursor,
         cursorElement: cursor.cursor.el,
         bubbleElement,
@@ -242,4 +254,24 @@ export class SayPlugin implements CursorPlugin {
     this.positionCleanup?.();
     this.positionCleanup = null;
   }
+
+  private resolvePositioner(cursor: Cursor): SayPositioner | undefined {
+    if (this.options.positioner) {
+      return this.options.positioner;
+    }
+
+    const floatingPlugin = cursor.getPlugin('floating');
+    return isFloatingSayProvider(floatingPlugin)
+      ? floatingPlugin.getSayPositioner()
+      : undefined;
+  }
+}
+
+function isFloatingSayProvider(plugin: unknown): plugin is FloatingSayProvider {
+  return (
+    typeof plugin === 'object' &&
+    plugin !== null &&
+    'getSayPositioner' in plugin &&
+    typeof plugin.getSayPositioner === 'function'
+  );
 }

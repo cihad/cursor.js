@@ -13,18 +13,11 @@ const proPlugins = [
     docsPath: '/docs/plugins/geminitts',
   },
   {
-    title: 'Floating Say',
+    title: 'Floating',
     description:
-      'Upgrade `.say()` with collision-aware floating placement for cleaner guided narration.',
+      'Add shared Floating UI positioning to say, prompt, and wait-for-user panels with one plugin.',
     demoPath: '/demos/say',
-    docsPath: '/docs/plugins/floating-say',
-  },
-  {
-    title: 'Floating Prompt',
-    description:
-      'Use smarter prompt positioning so confirmation UI stays readable around the cursor.',
-    demoPath: '/demos/prompt',
-    docsPath: '/docs/plugins/floating-prompt',
+    docsPath: '/docs/plugins/floating',
   },
   {
     title: 'Trail',
@@ -60,13 +53,6 @@ const proPlugins = [
       'Pause the script, spotlight the next action, and resume only after a real user confirms the step.',
     demoPath: '/demos/wait-for-user',
     docsPath: '/docs/plugins/wait-for-user',
-  },
-  {
-    title: 'Floating Wait For User',
-    description:
-      'Keep the handoff panel near the cursor with Floating UI while still supporting spotlight focus and speech narration.',
-    demoPath: '/demos/floating-wait-for-user',
-    docsPath: '/docs/plugins/floating-wait-for-user',
   },
 ] as const;
 

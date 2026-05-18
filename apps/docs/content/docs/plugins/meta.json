@@ -7,9 +7,8 @@
     "logging",
     "ripple",
     "say",
-    "floating-say",
     "prompt",
-    "floating-prompt",
+    "floating",
     "speech",
     "theme",
     "trail",
@@ -17,7 +16,6 @@
     "outline",
     "spotlight",
     "wait-for-user",
-    "floating-wait-for-user",
     "custom-plugins"
   ]
 }

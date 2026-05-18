@@ -40,11 +40,9 @@ import {
   ParticlePlugin,
   GeminiTTSPlugin,
   OutlinePlugin,
+  FloatingPlugin,
   SpotlightPlugin,
   WaitForUserPlugin,
-  FloatingWaitForUserPlugin,
-  createFloatingSayPositioner,
-  createFloatingPromptPositioner,
 } from '@cursor.js/pro';
 import { ThemeCursorPicker } from '@/components/app/theme-cursor-picker';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -87,10 +85,8 @@ type SettingsState = {
     speech: boolean;
     geminiTts: boolean;
     outline: boolean;
-    floatingSay: boolean;
-    floatingPrompt: boolean;
+    floating: boolean;
     waitForUser: boolean;
-    floatingWaitForUser: boolean;
   };
   rippleConfig: { color: string; duration: number; size: number };
   trailConfig: { length: number; thickness: number; color: string; fadeDuration: number };
@@ -154,21 +150,19 @@ const initialSettings: SettingsState = {
   coreConfig: { humanize: true, speed: 0.7, size: 1 },
   plugins: {
     theme: true,
-    ripple: true,
+    ripple: false,
     indicator: true,
-    sound: false,
+    sound: true,
     logging: false,
     trail: true,
     particle: true,
-    say: false,
+    say: true,
     prompt: false,
     speech: false,
     geminiTts: true,
     outline: true,
-    floatingSay: true,
-    floatingPrompt: true,
-    waitForUser: false,
-    floatingWaitForUser: true,
+    floating: true,
+    waitForUser: true,
   },
   rippleConfig: { color: '#000000', duration: 600, size: 50 },
   trailConfig: { length: 40, thickness: 7, color: '#0099ff', fadeDuration: 500 },
@@ -346,9 +340,8 @@ export function ClientPage() {
     if (settings.plugins.ripple) activeCore.push('RipplePlugin');
     if (settings.plugins.sound) activeCore.push('SoundPlugin');
     if (settings.plugins.logging) activeCore.push('LoggingPlugin');
-    if (settings.plugins.say && !settings.plugins.floatingSay) activeCore.push('SayPlugin');
-    if (settings.plugins.prompt && !settings.plugins.floatingPrompt)
-      activeCore.push('PromptPlugin');
+    if (settings.plugins.say) activeCore.push('SayPlugin');
+    if (settings.plugins.prompt) activeCore.push('PromptPlugin');
     if (settings.plugins.speech) activeCore.push('SpeechPlugin');
 
     // Pro
@@ -356,11 +349,10 @@ export function ClientPage() {
     if (settings.plugins.particle) activePro.push('ParticlePlugin');
     if (settings.plugins.geminiTts) activePro.push('GeminiTTSPlugin');
     if (settings.plugins.outline) activePro.push('OutlinePlugin');
-    if (settings.plugins.floatingSay) activePro.push('createFloatingSayPositioner');
-    if (settings.plugins.floatingPrompt) activePro.push('createFloatingPromptPositioner');
-    if (settings.plugins.floatingWaitForUser) {
-      activePro.push('SpotlightPlugin', 'FloatingWaitForUserPlugin');
-    } else if (settings.plugins.waitForUser) {
+    if (settings.plugins.floating) {
+      activePro.push('FloatingPlugin');
+    }
+    if (settings.plugins.waitForUser) {
       activePro.push('SpotlightPlugin', 'WaitForUserPlugin');
     }
 
@@ -415,16 +407,13 @@ export function ClientPage() {
       initLines.push(`cursor.use(new TrailPlugin${getPluginDiff('trailConfig')});`);
     if (settings.plugins.particle)
       initLines.push(`cursor.use(new ParticlePlugin${getPluginDiff('particleConfig')});`);
-    if (settings.plugins.floatingSay) {
-      initLines.push(`cursor.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));`);
-    } else if (settings.plugins.say) {
+    if (settings.plugins.floating) {
+      initLines.push(`cursor.use(new FloatingPlugin());`);
+    }
+    if (settings.plugins.say) {
       initLines.push(`cursor.use(new SayPlugin());`);
     }
-    if (settings.plugins.floatingPrompt) {
-      initLines.push(
-        `cursor.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));`,
-      );
-    } else if (settings.plugins.prompt) {
+    if (settings.plugins.prompt) {
       initLines.push(`cursor.use(new PromptPlugin());`);
     }
     if (settings.plugins.speech)
@@ -436,10 +425,7 @@ export function ClientPage() {
       const paramStr = diffStr === '()' ? '()' : diffStr;
       initLines.push(`cursor.use(new GeminiTTSPlugin${paramStr});`);
     }
-    if (settings.plugins.floatingWaitForUser) {
-      initLines.push(`cursor.use(new SpotlightPlugin());`);
-      initLines.push(`cursor.use(new FloatingWaitForUserPlugin());`);
-    } else if (settings.plugins.waitForUser) {
+    if (settings.plugins.waitForUser) {
       initLines.push(`cursor.use(new SpotlightPlugin());`);
       initLines.push(`cursor.use(new WaitForUserPlugin());`);
     }
@@ -477,21 +463,17 @@ export function ClientPage() {
     if (settings.plugins.ripple) cursor.use(new RipplePlugin(settings.rippleConfig));
     if (settings.plugins.trail) cursor.use(new TrailPlugin(settings.trailConfig));
     if (settings.plugins.particle) cursor.use(new ParticlePlugin(settings.particleConfig));
-    if (settings.plugins.floatingSay) {
-      cursor.use(new SayPlugin({ positioner: createFloatingSayPositioner() }));
-    } else if (settings.plugins.say) cursor.use(new SayPlugin());
-    if (settings.plugins.floatingPrompt) {
-      cursor.use(new PromptPlugin({ positioner: createFloatingPromptPositioner() }));
-    } else if (settings.plugins.prompt) cursor.use(new PromptPlugin());
+    if (settings.plugins.floating) {
+      cursor.use(new FloatingPlugin());
+    }
+    if (settings.plugins.say) cursor.use(new SayPlugin());
+    if (settings.plugins.prompt) cursor.use(new PromptPlugin());
     if (settings.plugins.speech) cursor.use(new SpeechPlugin(settings.speechConfig));
     if (settings.plugins.outline) cursor.use(new OutlinePlugin(settings.outlineConfig));
     if (settings.plugins.geminiTts) {
       cursor.use(new GeminiTTSPlugin(settings.geminiTtsConfig));
     }
-    if (settings.plugins.floatingWaitForUser) {
-      cursor.use(new SpotlightPlugin());
-      cursor.use(new FloatingWaitForUserPlugin());
-    } else if (settings.plugins.waitForUser) {
+    if (settings.plugins.waitForUser) {
       cursor.use(new SpotlightPlugin());
       cursor.use(new WaitForUserPlugin());
     }
@@ -504,7 +486,7 @@ export function ClientPage() {
       .say('Nice to meet you!', { duration: 2000 })
       .wait(500);
 
-    if (settings.plugins.floatingWaitForUser || settings.plugins.waitForUser) {
+    if (settings.plugins.waitForUser) {
       sequence = (sequence.hover('#demo-button') as any).waitForUser({
         target: '#demo-button',
         event: 'click',
@@ -645,16 +627,16 @@ export function ClientPage() {
             }
           />
           <SidebarItem
-            id="floatingSay"
-            label="Floating Say"
+            id="floating"
+            label="Floating"
             icon={MessageCircleMore}
             activeCategory={activeCategory}
-            onClick={() => setActiveCategory('floatingSay')}
+            onClick={() => setActiveCategory('floating')}
             isPro
             hasSwitch
-            switchChecked={settings.plugins.floatingSay}
+            switchChecked={settings.plugins.floating}
             onSwitchChange={(val) =>
-              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingSay', enabled: val })
+              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floating', enabled: val })
             }
           />
           <SidebarItem
@@ -672,19 +654,6 @@ export function ClientPage() {
             }
           />
           <SidebarItem
-            id="floatingPrompt"
-            label="Floating Prompt"
-            icon={MessageCircleMore}
-            activeCategory={activeCategory}
-            onClick={() => setActiveCategory('floatingPrompt')}
-            isPro
-            hasSwitch
-            switchChecked={settings.plugins.floatingPrompt}
-            onSwitchChange={(val) =>
-              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingPrompt', enabled: val })
-            }
-          />
-          <SidebarItem
             id="waitForUser"
             hasDemo
             demoUrl="/demos/wait-for-user"
@@ -697,21 +666,6 @@ export function ClientPage() {
             switchChecked={settings.plugins.waitForUser}
             onSwitchChange={(val) =>
               dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'waitForUser', enabled: val })
-            }
-          />
-          <SidebarItem
-            id="floatingWaitForUser"
-            hasDemo
-            demoUrl="/demos/floating-wait-for-user"
-            label="Floating Wait For User"
-            icon={Hand}
-            activeCategory={activeCategory}
-            onClick={() => setActiveCategory('floatingWaitForUser')}
-            isPro
-            hasSwitch
-            switchChecked={settings.plugins.floatingWaitForUser}
-            onSwitchChange={(val) =>
-              dispatch({ type: 'TOGGLE_PLUGIN', plugin: 'floatingWaitForUser', enabled: val })
             }
           />
           <SidebarItem
@@ -1076,12 +1030,13 @@ export function ClientPage() {
               </div>
             </div>
           )}
-          {activeCategory === 'floatingSay' && (
+          {activeCategory === 'floating' && (
             <div
-              className={`space-y-6 ${!settings.plugins.floatingSay ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`space-y-6 ${!settings.plugins.floating ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <div className="text-muted-foreground text-sm">
-                Pro positioning for <code>.say()</code> bubbles using Floating UI.
+                Shared Floating UI positioning for <code>.say()</code>, <code>.prompt()</code>,
+                and <code>.waitForUser()</code> when those plugins are enabled.
               </div>
             </div>
           )}
@@ -1094,15 +1049,6 @@ export function ClientPage() {
               </div>
             </div>
           )}
-          {activeCategory === 'floatingPrompt' && (
-            <div
-              className={`space-y-6 ${!settings.plugins.floatingPrompt ? 'opacity-50 pointer-events-none' : ''}`}
-            >
-              <div className="text-muted-foreground text-sm">
-                Pro positioning for <code>.prompt()</code> popups using Floating UI.
-              </div>
-            </div>
-          )}
           {activeCategory === 'waitForUser' && (
             <div
               className={`space-y-6 ${!settings.plugins.waitForUser ? 'opacity-50 pointer-events-none' : ''}`}
@@ -1110,16 +1056,6 @@ export function ClientPage() {
               <div className="text-muted-foreground text-sm">
                 Pro handoff flow for <code>.waitForUser()</code>. Pause the automation, spotlight
                 the target, and continue only after a real user interaction.
-              </div>
-            </div>
-          )}
-          {activeCategory === 'floatingWaitForUser' && (
-            <div
-              className={`space-y-6 ${!settings.plugins.floatingWaitForUser ? 'opacity-50 pointer-events-none' : ''}`}
-            >
-              <div className="text-muted-foreground text-sm">
-                Floating UI positioning for <code>.waitForUser()</code> panels plus speech/TTS
-                narration support through <code>SpeechPlugin</code> or <code>GeminiTTSPlugin</code>.
               </div>
             </div>
           )}

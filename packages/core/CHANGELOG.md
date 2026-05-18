@@ -1,5 +1,33 @@
 # @cursor.js/core
 
+## 0.8.0
+
+### Minor Changes
+
+- a96913a: feat: let core plugins use an optional floating provider
+
+  SayPlugin and PromptPlugin can now resolve their positioners from an installed
+  floating plugin provider while keeping the existing built-in positioning
+  behavior when no provider is present.
+
+- d2b6e93: feat: add customizable positioners for SayPlugin and PromptPlugin
+
+  SayPlugin and PromptPlugin now support custom positioners for advanced popup placement while keeping a dependency-free default behavior.
+
+- 6c33516: feat: add built-in ThemePlugin cursor factories
+
+  ThemePlugin now exposes built-in configurable cursor factories via `ThemePlugin.cursors.default()`, `pointer()`, and `text()`, and the default theme is sourced from those factories.
+
+### Patch Changes
+
+- 85bb178: fix: correct the built-in pointer cursor hotspot
+
+  The built-in ThemePlugin pointer cursor now uses the intended hotspot offset so clicks and hover states align with the visible tip.
+
+- 55278f5: fix: clean up speech plugin listeners when toggling docs demo plugins
+
+  SpeechPlugin now unsubscribes from `speech_requested` when removed so repeated toggles do not stack duplicate speech handlers. The docs settings demo also keeps mutually exclusive speech and interaction plugin variants in sync.
+
 ## 0.7.1
 
 ### Patch Changes

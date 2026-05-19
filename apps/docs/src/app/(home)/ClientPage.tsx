@@ -1925,13 +1925,13 @@ c.move('#btn1')
 
               <div className="flex items-center justify-between w-full md:w-auto bg-muted/50 border border-border rounded-lg px-4 py-2 relative group hover:bg-muted/80 transition-colors">
                 <code className="text-sm font-mono text-muted-foreground mr-8">
-                  npx skills add cursor-js/cursor.js
+                  npx skills add cursor-js/skills
                 </code>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 absolute right-1"
-                  onClick={() => handleCopy('npx skills add cursor-js/cursor.js', setCopiedNpx)}
+                  onClick={() => handleCopy('npx skills add cursor-js/skills', setCopiedNpx)}
                   title="Copy npx command"
                 >
                   {copiedNpx ? (
